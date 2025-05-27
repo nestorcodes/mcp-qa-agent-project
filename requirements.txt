@@ -1,0 +1,10 @@
+langchain
+langchain-openai
+python-dotenv
+requests
+crawl4ai
+fastapi
+uvicorn
+langgraph
+langchain-mcp-adapters
+FastMCP
