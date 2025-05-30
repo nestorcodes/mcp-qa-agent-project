@@ -10,7 +10,7 @@ load_dotenv()
 async def main():
     client = MultiServerMCPClient(
         {
-            "weather": {
+            "QA agent": {
                 # Asegúrate de tener corriendo el servidor en localhost:8000
                 "url": "http://localhost:8000/mcp",
                 "transport": "streamable_http",

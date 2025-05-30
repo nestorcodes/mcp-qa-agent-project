@@ -20,11 +20,11 @@ async def crawl_website(url: str) -> str:
         return result.markdown
 
 @mcp.tool()
-async def browser_qa(task: str) -> str:
-    print(f"[debug-server] browser_qa({task})")
+async def browser_use(task: str) -> str:
+    print(f"[debug-server] browser_use({task})")
     llm = ChatOpenAI(model="gpt-4")
     agent = Agent(
-        task=task,
+        task="Entra a comparasoftware.com y compara los precios de los productos",
         llm=llm,
     )
     result = await agent.run()
