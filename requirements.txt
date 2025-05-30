@@ -8,3 +8,5 @@ uvicorn
 langgraph
 langchain-mcp-adapters
 FastMCP
+browser-use
+playwright
