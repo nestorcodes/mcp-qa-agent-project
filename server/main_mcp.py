@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-mcp = FastMCP("QA Agent Server")
+mcp = FastMCP("Quality Assurance Agent Server")
 
 
 
