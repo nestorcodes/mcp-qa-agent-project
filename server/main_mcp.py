@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-mcp = FastMCP("Echo Server")
+mcp = FastMCP("QA Agent Server")
 
 
 
@@ -20,14 +20,15 @@ async def crawl_website(url: str) -> str:
         return result.markdown
 
 @mcp.tool()
-async def browser_use(task: str) -> str:
-    print(f"[debug-server] browser_use({task})")
-    llm = ChatOpenAI(model="gpt-4")
+async def browser_agent(task: str) -> str:
+    print(f"[debug-server] browser_agent({task})")
+    llm = ChatOpenAI(model="gpt-4o")
     agent = Agent(
         task="Entra a comparasoftware.com y compara los precios de los productos",
         llm=llm,
     )
     result = await agent.run()
+    print(result)
     return result
 
 if __name__ == "__main__":
