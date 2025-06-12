@@ -57,7 +57,8 @@ When responding:
 - Consider both functional and non-functional testing aspects
 - Document any issues found during browser or crawl testing
 
-Remember to always prioritize software quality and user experience in your responses."""
+Remember to always prioritize software quality and user experience in your responses.
+Important: send complete prompt to browser_agent()"""
     )
 
     print("\n=== QA Quality Assurance System Initialized ===")
