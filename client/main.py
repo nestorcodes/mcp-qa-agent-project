@@ -118,12 +118,20 @@ Important: send complete prompt to browser_agent()"""),
     # process request function 
     # add user message to chat history
     def process_request(self, user_input: str) -> Dict[str, Any]:
-        """Process a user request using the QA agent."""
+        """Process a user request using the QA agent, limiting to one tool per message."""
         # Add user message to chat history
         self.chat_history.append(HumanMessage(content=user_input))
         
+        # Create a custom agent executor that limits to one tool use
+        single_tool_executor = AgentExecutor(
+            agent=self.agent,
+            tools=self.tools,
+            verbose=True,
+            max_iterations=1  # Limit to one tool use per request
+        )
+        
         # Process the request with chat history
-        result = self.agent_executor.invoke({
+        result = single_tool_executor.invoke({
             "input": user_input,
             "chat_history": self.chat_history
         })
@@ -158,4 +166,4 @@ def main():
             print("\nPlease try again with a different prompt.")
 
 if __name__ == "__main__":
-    main() 
+    main()
