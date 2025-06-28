@@ -31,7 +31,7 @@ async def browser_agent(prompt: str) -> str:
     )
     result = await agent.run()
     print(result)
-    return result
+    return result.final_result(),
 
 if __name__ == "__main__":
     mcp.run(transport="streamable-http")

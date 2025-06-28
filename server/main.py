@@ -53,9 +53,9 @@ async def browser_agent(request: BrowserAgentRequest):
             llm=llm
         )
         result = await agent.run()
-        print(result)
+        print(result.final_result())
         return BrowserAgentResponse(
-            result=result,
+            result=result.final_result(),
             prompt=request.prompt
         )
     except Exception as e:
