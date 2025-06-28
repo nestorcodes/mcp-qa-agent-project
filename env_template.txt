@@ -1,0 +1,10 @@
+# Server Configuration
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8000
+
+# Client Configuration
+CLIENT_HOST=localhost
+CLIENT_PORT=8000
+
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here 

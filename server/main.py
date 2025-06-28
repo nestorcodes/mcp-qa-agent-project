@@ -5,6 +5,7 @@ from langchain_openai import ChatOpenAI
 from browser_use import Agent
 from dotenv import load_dotenv
 import uvicorn
+import os
 
 load_dotenv()
 
@@ -75,7 +76,8 @@ async def root():
         }
     }
 
-
-
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+    # Get host and port from environment variables with defaults
+    host = os.getenv("SERVER_HOST", "0.0.0.0")
+    port = int(os.getenv("SERVER_PORT", 8000))
+    uvicorn.run("main:app", host=host, port=port)

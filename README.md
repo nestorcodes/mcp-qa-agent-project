@@ -1,6 +1,6 @@
 # MCP QA agent with OpenAI Integration
 
-
+## Environment Configuration
 
 1. Create a virtual environment and activate it:
 ```bash
@@ -13,10 +13,37 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
     pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the root directory with your OpenAI API key:
+3. Set up environment variables:
+   - Copy `env_template.txt` to `.env` in the root directory
+   - Update the values in `.env` with your configuration:
+
+```bash
+# Copy the template
+cp env_template.txt .env
+
+# Edit .env with your values
 ```
-OPENAI_API_KEY=your_api_key_here
+
+The `.env` file should contain:
 ```
+# Server Configuration
+SERVER_HOST=0.0.0.0
+SERVER_PORT=8000
+
+# Client Configuration
+CLIENT_HOST=localhost
+CLIENT_PORT=8000
+
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+```
+
+**Environment Variables:**
+- `SERVER_HOST`: Host address for the server (default: 0.0.0.0)
+- `SERVER_PORT`: Port for the server (default: 8000)
+- `CLIENT_HOST`: Host address for client to connect to server (default: localhost)
+- `CLIENT_PORT`: Port for client to connect to server (default: 8000)
+- `OPENAI_API_KEY`: Your OpenAI API key (required)
 
 ## Running the Server
 
@@ -27,13 +54,10 @@ cd server
 
 2. Start the server:
 ```bash
-python main_mcp.py
+python main.py
 ```
 
-The server will start on `http://localhost:8000`
-
-
-
+The server will start using the host and port from your `.env` file (default: `http://localhost:8000`)
 
 ## Running the Client
 
@@ -44,8 +68,10 @@ cd client
 
 2. Start the client:
 ```bash
-python main_mcp.py
+python main.py
 ```
+
+The client will connect to the server using the host and port from your `.env` file.
 
 ## Links 
 https://modelcontextprotocol.io/introduction

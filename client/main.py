@@ -17,6 +17,11 @@ class QAAgent:
         if not self.api_key:
             raise ValueError("OPENAI_API_KEY not found in environment variables")
         
+        # Get server configuration from environment variables
+        self.server_host = os.getenv("CLIENT_HOST", "localhost")
+        self.server_port = os.getenv("CLIENT_PORT", "8000")
+        self.server_url = f"http://{self.server_host}:{self.server_port}"
+        
         # create llm
         self.llm = ChatOpenAI(
             model="gpt-3.5-turbo-1106",
@@ -91,7 +96,7 @@ Important: send complete prompt to browser_agent()"""),
         try:
             print(f"[debug-client] crawl_website({url})")
             response = requests.post(
-                "http://localhost:8000/crawl",
+                f"{self.server_url}/crawl",
                 json={"url": url}
             )
             response.raise_for_status()
@@ -106,7 +111,7 @@ Important: send complete prompt to browser_agent()"""),
         try:
             print(f"[debug-client] browser_agent({prompt})")
             response = requests.post(
-                "http://localhost:8000/browser-agent",
+                f"{self.server_url}/browser-agent",
                 json={"prompt": prompt}
             )
             response.raise_for_status()
