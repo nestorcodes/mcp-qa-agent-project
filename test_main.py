@@ -38,9 +38,9 @@ def test_browser_agent():
 if __name__ == "__main__":
     print("🧪 Starting API tests...\n")
     try:
-        #test_root()
-        # test_crawl()
-        test_browser_agent()
+        # test_root()
+        test_crawl()
+        # test_browser_agent()
         print("\n✨ All tests passed successfully!")
     except AssertionError as e:
         print(f"\n❌ Test failed: {str(e)}")

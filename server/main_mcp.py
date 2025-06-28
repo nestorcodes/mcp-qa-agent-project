@@ -17,7 +17,7 @@ async def crawl_website(url: str) -> str:
     print(f"[debug-server] crawl_website({url})")
     async with AsyncWebCrawler() as crawler:
         result = await crawler.arun(url=url)
-        return result.markdown
+    return result.markdown
 
 @mcp.tool()
 async def browser_agent(prompt: str) -> str:

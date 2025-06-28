@@ -33,10 +33,10 @@ async def crawl_website(request: CrawlRequest):
         print(f"[debug-server] crawl_website({request.url})")
         async with AsyncWebCrawler() as crawler:
             result = await crawler.arun(url=request.url)
-            return CrawlResponse(
-                markdown_content=result.markdown,
-                url=request.url
-            )
+        return CrawlResponse(
+            markdown_content=result.markdown,
+            url=request.url
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error crawling website: {str(e)}")
 
