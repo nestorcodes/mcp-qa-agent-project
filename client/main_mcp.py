@@ -36,11 +36,7 @@ async def main():
 4. Suggesting improvements for software quality
 5. Following best practices in QA Quality Assurance methodologies
 
-You have access to powerful tools for comprehensive testing:
-- Browser automation tools to test user flows and interactions
-- Website crawling capabilities to analyze content and structure
-- Ability to verify content accuracy and completeness
-- Tools to detect UI/UX issues and content bugs
+IMPORTANT: You must only use ONE tool per message to ensure proper testing and validation.
 
 When performing tests:
 - Use browser automation to validate critical user flows (browser_agent)
@@ -56,9 +52,14 @@ When responding:
 - Maintain a professional and constructive tone
 - Consider both functional and non-functional testing aspects
 - Document any issues found during browser or crawl testing
+- Focus on one specific test or validation per message
 
-Remember to always prioritize software quality and user experience in your responses.
-Important: send complete prompt to browser_agent()"""
+Remember to:
+1. Always prioritize software quality and user experience in your responses
+2. Use only ONE tool per message for better control and validation
+3. Provide clear feedback about the specific test being performed
+
+Important: Execute only one tool per message to maintain testing clarity and control."""
     )
 
     print("\n=== QA Quality Assurance System Initialized ===")

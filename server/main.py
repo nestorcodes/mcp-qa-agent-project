@@ -47,7 +47,7 @@ async def browser_agent(request: BrowserAgentRequest):
     """
     try:
         print(f"[debug-server] browser_agent({request.prompt})")
-        llm = ChatOpenAI(model="gpt-4")
+        llm = ChatOpenAI(model="gpt-4o")
         agent = Agent(
             task=request.prompt,
             llm=llm
