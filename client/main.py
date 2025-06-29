@@ -1,4 +1,5 @@
 import os
+import json
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_openai_functions_agent
@@ -74,6 +75,10 @@ When responding:
 - Consider both functional and non-functional testing aspects
 - Document any issues found during browser or crawl testing
 
+IMPORTANT: After your analysis, you must determine if any bugs, errors, or critical issues were found:
+- If you find ANY bugs, errors, broken functionality, missing content, or critical issues, respond with "BUG_DETECTED: " at the beginning of your message
+- If everything appears to be working correctly and no issues are found, respond with "PASSED: " at the beginning of your message
+
 Remember to always prioritize software quality and user experience in your responses.
 Important: send complete prompt to browser_agent()"""),
             MessagesPlaceholder(variable_name="chat_history"),
@@ -123,7 +128,7 @@ Important: send complete prompt to browser_agent()"""),
     # process request function 
     # add user message to chat history
     def process_request(self, user_input: str) -> Dict[str, Any]:
-        """Process a user request using the QA agent, limiting to one tool per message."""
+        """Process a user request using the QA agent and return JSON with status and console_log."""
         # Add user message to chat history
         self.chat_history.append(HumanMessage(content=user_input))
         
@@ -141,10 +146,31 @@ Important: send complete prompt to browser_agent()"""),
             "chat_history": self.chat_history
         })
         
-        # Add AI response to chat history
-        self.chat_history.append(AIMessage(content=result["output"]))
+        # Get the agent's response
+        agent_response = result["output"]
         
-        return result
+        # Add AI response to chat history
+        self.chat_history.append(AIMessage(content=agent_response))
+        
+        # Determine status based on agent response
+        if agent_response.startswith("BUG_DETECTED:"):
+            status = "failed"
+            # Remove the prefix for cleaner console_log
+            console_log = agent_response.replace("BUG_DETECTED:", "").strip()
+        elif agent_response.startswith("PASSED:"):
+            status = "passed"
+            # Remove the prefix for cleaner console_log
+            console_log = agent_response.replace("PASSED:", "").strip()
+        else:
+            # Default to failed if no clear status indicator
+            status = "passed"
+            console_log = agent_response
+        
+        # Return JSON with status and console_log
+        return {
+            "status": status,
+            "console_logs": console_log
+        }
 
 def main():
     print("\n=== QA Quality Assurance System Initialized ===")
@@ -163,7 +189,7 @@ def main():
         try:
             result = client.process_request(user_input)
             print("\n=== QA Agent Response ===")
-            print(result["output"])
+            print(json.dumps(result, indent=2))
         except Exception as e:
             print(f"\n=== Error Occurred ===")
             print(f"Error type: {type(e).__name__}")
