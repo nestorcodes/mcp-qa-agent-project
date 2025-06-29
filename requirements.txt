@@ -10,3 +10,4 @@ langchain-mcp-adapters
 FastMCP
 browser-use
 playwright
+youtube_transcript_api

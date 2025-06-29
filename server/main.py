@@ -4,6 +4,8 @@ from crawl4ai import AsyncWebCrawler
 from langchain_openai import ChatOpenAI
 from browser_use import Agent
 from dotenv import load_dotenv
+from youtube_transcript_api import YouTubeTranscriptApi
+from urllib.parse import urlparse, parse_qs
 import uvicorn
 import os
 import asyncio
@@ -29,6 +31,15 @@ class BrowserAgentRequest(BaseModel):
 class BrowserAgentResponse(BaseModel):
     result: str
     prompt: str
+
+class YouTubeTranscriptRequest(BaseModel):
+    url: str
+
+class YouTubeTranscriptResponse(BaseModel):
+    transcript: list
+    video_id: str
+    url: str
+    language: str
 
 async def get_crawler():
     """Get or create the global crawler instance"""
@@ -78,6 +89,48 @@ async def browser_agent(request: BrowserAgentRequest):
         print(f"[debug-server] Error running browser agent: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error running browser agent: {str(e)}")
 
+@app.post("/youtube-transcript", response_model=YouTubeTranscriptResponse)
+async def youtube_transcript(request: YouTubeTranscriptRequest):
+    """
+    Extract transcript from a YouTube video URL
+    """
+    try:
+        print(f"[debug-server] youtube_transcript({request.url})")
+        
+        # Parse the URL
+        parsed_url = urlparse(request.url)
+        # Extract URL parameters
+        query_params = parse_qs(parsed_url.query)
+        # Get the 'v' parameter value
+        video_id = query_params.get("v", [None])[0]
+        
+        if not video_id:
+            raise HTTPException(status_code=400, detail="Invalid YouTube URL. Could not extract video ID.")
+        
+        # Fetch transcript
+        ytt_api = YouTubeTranscriptApi()
+        fetched_transcript = ytt_api.fetch(video_id)
+        
+        # Get raw data
+        data = fetched_transcript.to_raw_data()
+        
+        # Process the transcript data to add end times
+        for i in range(len(data) - 1):
+            data[i]['end'] = data[i + 1]['start']
+        
+        # Last element: end = start + duration
+        data[-1]['end'] = data[-1]['start'] + data[-1]['duration']
+        
+        return YouTubeTranscriptResponse(
+            transcript=data,
+            video_id=video_id,
+            url=request.url,
+            language=fetched_transcript.language_code
+        )
+    except Exception as e:
+        print(f"[debug-server] Error extracting YouTube transcript: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error extracting YouTube transcript: {str(e)}")
+
 @app.get("/")
 async def root():
     """
@@ -88,7 +141,8 @@ async def root():
         "version": "1.0.0",
         "endpoints": {
             "crawl": "/crawl - POST - Crawl a website",
-            "browser_agent": "/browser-agent - POST - Run browser agent"
+            "browser_agent": "/browser-agent - POST - Run browser agent",
+            "youtube_transcript": "/youtube-transcript - POST - Extract YouTube video transcript"
         }
     }
 
