@@ -34,6 +34,7 @@ class BrowserAgentResponse(BaseModel):
 
 class YouTubeTranscriptRequest(BaseModel):
     url: str
+    translate_code: str
 
 class YouTubeTranscriptResponse(BaseModel):
     transcript: list
@@ -113,6 +114,10 @@ async def youtube_transcript(request: YouTubeTranscriptRequest):
         
         # Get raw data
         data = fetched_transcript.to_raw_data()
+
+        if data[-1]['start'] + data[-1]['duration'] > 1000:
+            raise HTTPException(status_code=400, detail="Video is too long. Please select a shorter video.")
+        
         
         # Process the transcript data to add end times
         for i in range(len(data) - 1):
@@ -125,7 +130,8 @@ async def youtube_transcript(request: YouTubeTranscriptRequest):
             transcript=data,
             video_id=video_id,
             url=request.url,
-            language=fetched_transcript.language_code
+            language=fetched_transcript.language_code,
+            translate_code=request.translate_code
         )
     except Exception as e:
         print(f"[debug-server] Error extracting YouTube transcript: {str(e)}")

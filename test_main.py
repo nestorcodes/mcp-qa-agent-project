@@ -39,7 +39,7 @@ def test_browser_agent():
 def test_youtube_transcript():
     # Example YouTube video URL
     video_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-    payload = {"url": video_url}
+    payload = {"url": video_url, "translate_code": "es"}
     response = requests.post(f"{BASE_URL}/youtube-transcript", json=payload)
     assert response.status_code == 200
     data = response.json()
