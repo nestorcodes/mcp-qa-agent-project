@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request, status, Depends
 from pydantic import BaseModel
 from crawl4ai import AsyncWebCrawler
 from langchain_openai import ChatOpenAI
@@ -17,6 +17,15 @@ app = FastAPI(title="Quality Assurance Agent Server", version="1.0.0")
 # Global crawler instance
 crawler = None
 crawler_lock = asyncio.Lock()
+
+API_KEY = os.getenv("QA_API_KEY")
+if not API_KEY:
+    raise RuntimeError("QA_API_KEY not set in environment variables")
+
+def verify_api_key(request: Request):
+    api_key = request.headers.get("x-api-key")
+    if api_key != API_KEY:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing API key")
 
 class CrawlRequest(BaseModel):
     url: str
@@ -52,7 +61,7 @@ async def get_crawler():
         return crawler
 
 @app.post("/crawl", response_model=CrawlResponse)
-async def crawl_website(request: CrawlRequest):
+async def crawl_website(request: CrawlRequest, _: None = Depends(verify_api_key)):
     """
     Crawl a website and return its markdown content
     """
@@ -69,7 +78,7 @@ async def crawl_website(request: CrawlRequest):
         raise HTTPException(status_code=500, detail=f"Error crawling website: {str(e)}")
 
 @app.post("/browser-agent", response_model=BrowserAgentResponse)
-async def browser_agent(request: BrowserAgentRequest):
+async def browser_agent(request: BrowserAgentRequest, _: None = Depends(verify_api_key)):
     """
     Run a browser agent with the given prompt
     """
@@ -101,7 +110,7 @@ async def browser_agent(request: BrowserAgentRequest):
         raise HTTPException(status_code=500, detail=f"Error running browser agent: {str(e)}")
 
 @app.post("/youtube-transcript", response_model=YouTubeTranscriptResponse)
-async def youtube_transcript(request: YouTubeTranscriptRequest):
+async def youtube_transcript(request: YouTubeTranscriptRequest, _: None = Depends(verify_api_key)):
     """
     Extract transcript from a YouTube video URL
     """

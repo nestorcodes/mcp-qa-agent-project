@@ -23,6 +23,11 @@ class QAAgent:
         self.server_port = os.getenv("CLIENT_PORT", "8000")
         self.server_url = f"http://{self.server_host}:{self.server_port}"
         
+        # QA API key for server authentication
+        self.qa_api_key = os.getenv("QA_API_KEY")
+        if not self.qa_api_key:
+            raise ValueError("QA_API_KEY not found in environment variables")
+        
         # create llm
         self.llm = ChatOpenAI(
             model="gpt-3.5-turbo-1106",
@@ -102,7 +107,8 @@ Important: send complete prompt to browser_agent()"""),
             print(f"[debug-client] crawl_website({url})")
             response = requests.post(
                 f"{self.server_url}/crawl",
-                json={"url": url}
+                json={"url": url},
+                headers={"x-api-key": self.qa_api_key}
             )
             response.raise_for_status()
             result = response.json()
@@ -117,7 +123,8 @@ Important: send complete prompt to browser_agent()"""),
             print(f"[debug-client] browser_agent({prompt})")
             response = requests.post(
                 f"{self.server_url}/browser-agent",
-                json={"prompt": prompt}
+                json={"prompt": prompt},
+                headers={"x-api-key": self.qa_api_key}
             )
             response.raise_for_status()
             result = response.json()

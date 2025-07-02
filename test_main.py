@@ -1,12 +1,30 @@
 import requests
 import json
+import os
+from dotenv import load_dotenv
 
-# BASE_URL = "http://localhost:8000"
-BASE_URL = "http://64.227.81.67:5001"
+# Load environment variables
+load_dotenv()
+
+BASE_URL = "http://localhost:8000"
+# BASE_URL = "http://64.227.81.67:5001"
+
+# Get API key from environment
+API_KEY = os.getenv("QA_API_KEY")
+if not API_KEY:
+    print("⚠️  Warning: QA_API_KEY not found in environment variables")
+    print("   Please set QA_API_KEY in your .env file or environment")
+    API_KEY = "your_api_key_here"  # Fallback for testing
+
+# Headers for API requests
+HEADERS = {
+    "Content-Type": "application/json",
+    "x-api-key": API_KEY
+}
 
 
 def test_root():
-    response = requests.get(f"{BASE_URL}/")
+    response = requests.get(f"{BASE_URL}/", headers=HEADERS)
     assert response.status_code == 200
     data = response.json()
     assert "message" in data
@@ -17,7 +35,7 @@ def test_root():
 def test_crawl():
     url = "https://www.comparasoftware.com"
     payload = {"url": url}
-    response = requests.post(f"{BASE_URL}/crawl", json=payload)
+    response = requests.post(f"{BASE_URL}/crawl", json=payload, headers=HEADERS)
     assert response.status_code == 200
     data = response.json()
     assert "markdown_content" in data
@@ -29,7 +47,7 @@ def test_crawl():
 def test_browser_agent():
     prompt = "login in comparasoftware with user: provider password: provider"
     payload = {"prompt": prompt}
-    response = requests.post(f"{BASE_URL}/browser-agent", json=payload)
+    response = requests.post(f"{BASE_URL}/browser-agent", json=payload, headers=HEADERS)
     assert response.status_code == 200
     data = response.json()
     assert "result" in data
@@ -42,7 +60,7 @@ def test_youtube_transcript():
     # Example YouTube video URL
     video_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
     payload = {"url": video_url, "translate_code": "es"}
-    response = requests.post(f"{BASE_URL}/youtube-transcript", json=payload)
+    response = requests.post(f"{BASE_URL}/youtube-transcript", json=payload, headers=HEADERS)
     assert response.status_code == 200
     data = response.json()
     assert "transcript" in data
@@ -101,6 +119,11 @@ if __name__ == "__main__":
                     print(f"\n❌ Test failed: {str(e)}")
                 except requests.exceptions.ConnectionError:
                     print("\n❌ Error: Could not connect to the server. Make sure the server is running on http://localhost:8000")
+                except requests.exceptions.HTTPError as e:
+                    if e.response.status_code == 401:
+                        print("\n❌ Error: Invalid or missing API key. Please check your QA_API_KEY environment variable.")
+                    else:
+                        print(f"\n❌ HTTP Error: {e.response.status_code} - {e.response.text}")
                 except Exception as e:
                     print(f"\n❌ Unexpected error: {str(e)}")
             else:
