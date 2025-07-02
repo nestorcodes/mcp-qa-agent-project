@@ -8,9 +8,42 @@ from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 import requests
 from typing import Dict, Any, List
 from langchain.schema import HumanMessage, AIMessage
+from fastapi import FastAPI, HTTPException, Depends, Header
+from pydantic import BaseModel
+import uvicorn
 
 # Load environment variables
 load_dotenv()
+
+# Pydantic model for request
+class PromptRequest(BaseModel):
+    prompt: str
+
+# Pydantic model for response
+class PromptResponse(BaseModel):
+    status: str
+    console_logs: str
+
+# Create FastAPI app
+app = FastAPI(
+    title="QA Agent API",
+    description="API for Quality Assurance agent that processes prompts and returns test results",
+    version="1.0.0"
+)
+
+# Get API key from environment
+QA_API_KEY_CLIENT = os.getenv("QA_API_KEY_CLIENT")
+if not QA_API_KEY_CLIENT:
+    raise ValueError("QA_API_KEY_CLIENT not found in environment variables")
+
+async def verify_api_key(x_api_key: str = Header(None)):
+    """Verify the API key from the request header."""
+    if x_api_key != QA_API_KEY_CLIENT:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid API key"
+        )
+    return x_api_key
 
 class QAAgent:
     def __init__(self):
@@ -178,29 +211,72 @@ Important: send complete prompt to browser_agent()"""),
             "console_logs": console_log
         }
 
+# Global QA Agent instance
+qa_agent = None
+
+@app.on_event("startup")
+async def startup_event():
+    """Initialize the QA Agent on startup."""
+    global qa_agent
+    try:
+        qa_agent = QAAgent()
+        print("=== QA Quality Assurance API Initialized ===")
+        print("Available tools: crawl_website, browser_agent")
+        print(f"API Key authentication enabled")
+    except Exception as e:
+        print(f"Error initializing QA Agent: {str(e)}")
+        raise e
+
+@app.get("/")
+async def root():
+    """Root endpoint with API information."""
+    return {
+        "message": "QA Quality Assurance API",
+        "version": "1.0.0",
+        "authentication": "API Key required (X-API-Key header)",
+        "endpoints": {
+            "/process-prompt": "POST - Process a QA prompt and return results (requires API key)",
+            "/health": "GET - Health check endpoint"
+        }
+    }
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint."""
+    return {"status": "healthy", "qa_agent_initialized": qa_agent is not None}
+
+@app.post("/process-prompt", response_model=PromptResponse)
+async def process_prompt(
+    request: PromptRequest,
+    api_key: str = Depends(verify_api_key)
+):
+    """Process a QA prompt and return status and console logs."""
+    if qa_agent is None:
+        raise HTTPException(status_code=500, detail="QA Agent not initialized")
+    
+    try:
+        result = qa_agent.process_request(request.prompt)
+        return PromptResponse(**result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing prompt: {str(e)}")
+
 def main():
-    print("\n=== QA Quality Assurance System Initialized ===")
-    print("Available tools: crawl_website, browser_agent")
-    print("Type 'quit' to exit\n")
+    """Run the FastAPI server."""
+    # Get port from environment or use default
+    port = int(os.getenv("CLIENT_API_PORT", "8001"))
+    host = os.getenv("CLIENT_API_HOST", "0.0.0.0")
     
-    client = QAAgent()
+    print(f"\n=== Starting QA Agent API Server ===")
+    print(f"Server will run on http://{host}:{port}")
+    print("Available endpoints:")
+    print(f"  - GET  http://{host}:{port}/ (API info)")
+    print(f"  - GET  http://{host}:{port}/health (Health check)")
+    print(f"  - POST http://{host}:{port}/process-prompt (Process QA prompt - requires API key)")
+    print(f"\nAPI Key authentication enabled")
+    print("Use X-API-Key header with your QA_API_KEY_CLIENT value")
+    print("\nPress Ctrl+C to stop the server\n")
     
-    # usage in terminal
-    while True:
-        user_input = input("\nEnter your QA prompt (or 'quit' to exit): ")
-        if user_input.lower() == 'quit':
-            print("\nExiting QA system. Goodbye!")
-            break
-            
-        try:
-            result = client.process_request(user_input)
-            print("\n=== QA Agent Response ===")
-            print(json.dumps(result, indent=2))
-        except Exception as e:
-            print(f"\n=== Error Occurred ===")
-            print(f"Error type: {type(e).__name__}")
-            print(f"Error message: {str(e)}")
-            print("\nPlease try again with a different prompt.")
+    uvicorn.run(app, host=host, port=port)
 
 if __name__ == "__main__":
     main()
