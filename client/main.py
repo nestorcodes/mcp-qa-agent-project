@@ -136,8 +136,7 @@ Important: send complete prompt to browser_agent()"""),
         single_tool_executor = AgentExecutor(
             agent=self.agent,
             tools=self.tools,
-            verbose=True,
-            max_iterations=1  # Limit to one tool use per request
+            verbose=True # Limit to one tool use per request
         )
         
         # Process the request with chat history
