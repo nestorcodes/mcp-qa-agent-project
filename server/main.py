@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from crawl4ai import AsyncWebCrawler
 from langchain_openai import ChatOpenAI
-from browser_use import Agent
+from browser_use import Agent, BrowserConfig, Browser
 from dotenv import load_dotenv
 from youtube_transcript_api import YouTubeTranscriptApi
 from urllib.parse import urlparse, parse_qs
@@ -76,12 +76,22 @@ async def browser_agent(request: BrowserAgentRequest):
     try:
         print(f"[debug-server] browser_agent({request.prompt})")
         llm = ChatOpenAI(model="gpt-4o")
+        
+        # Create browser configuration with headless mode
+        browser_config = BrowserConfig(headless=True)
+        browser = Browser(config=browser_config)
+        
         agent = Agent(
             task=request.prompt,
-            llm=llm
+            llm=llm,
+            browser=browser
         )
         result = await agent.run()
         print(result.final_result())
+        
+        # Close the browser after use
+        await browser.close()
+        
         return BrowserAgentResponse(
             result=result.final_result(),
             prompt=request.prompt

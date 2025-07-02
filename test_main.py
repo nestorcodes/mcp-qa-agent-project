@@ -1,7 +1,9 @@
 import requests
 import json
 
-BASE_URL = "http://localhost:8000"
+# BASE_URL = "http://localhost:8000"
+BASE_URL = "http://64.227.81.67:5001"
+
 
 def test_root():
     response = requests.get(f"{BASE_URL}/")
