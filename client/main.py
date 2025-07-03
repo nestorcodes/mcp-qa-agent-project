@@ -62,6 +62,7 @@ class QAAgent:
             raise ValueError("OPENAI_API_KEY not found in environment variables")
         
         # Get server configuration from environment variables
+        # Always use localhost for server connection to avoid connection issues
         self.server_host = os.getenv("CLIENT_HOST", "localhost")
         self.server_port = os.getenv("CLIENT_PORT", "8000")
         self.server_url = f"http://{self.server_host}:{self.server_port}"
@@ -148,6 +149,7 @@ Important: send complete prompt to browser_agent()"""),
         """Crawl a website and return its markdown content for content analysis."""
         try:
             print(f"[debug-client] crawl_website({url})")
+            print(f"[debug-client] Connecting to server at: {self.server_url}")
             response = requests.post(
                 f"{self.server_url}/crawl",
                 json={"url": url},
@@ -164,6 +166,7 @@ Important: send complete prompt to browser_agent()"""),
         """Run a browser automation agent to test user flows and interactions."""
         try:
             print(f"[debug-client] browser_agent({prompt})")
+            print(f"[debug-client] Connecting to server at: {self.server_url}")
             response = requests.post(
                 f"{self.server_url}/browser-agent",
                 json={"prompt": prompt},
@@ -233,6 +236,7 @@ async def startup_event():
         print("=== QA Quality Assurance API Initialized ===")
         print("Available tools: crawl_website, browser_agent")
         print(f"API Key authentication enabled")
+        print(f"Server URL: {qa_agent.server_url}")
     except Exception as e:
         print(f"Error initializing QA Agent: {str(e)}")
         raise e
