@@ -7,8 +7,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BASE_URL = "http://localhost:8000"
-# BASE_URL = "http://64.227.81.67:5001"
-
+#BASE_URL = "http://64.227.81.67:5001"
+# Client API base URL
+CLIENT_BASE_URL = "http://localhost:8001"
+#CLIENT_BASE_URL = "http://64.227.81.67:5002"
 # Get API key from environment
 API_KEY = os.getenv("QA_API_KEY")
 if not API_KEY:
@@ -35,8 +37,7 @@ CLIENT_HEADERS = {
     "X-API-Key": CLIENT_API_KEY
 }
 
-# Client API base URL
-CLIENT_BASE_URL = "http://localhost:8001"
+
 
 
 def test_root():
@@ -74,7 +75,7 @@ def test_browser_agent():
 
 def test_youtube_transcript():
     # Example YouTube video URL
-    video_url = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    video_url = "https://www.youtube.com/watch?v=m-qyEDwB1tw&t=128s"
     payload = {"url": video_url, "translate_code": "es"}
     response = requests.post(f"{BASE_URL}/youtube-transcript", json=payload, headers=HEADERS)
     assert response.status_code == 200

@@ -9,6 +9,7 @@ import requests
 from typing import Dict, Any, List
 from langchain.schema import HumanMessage, AIMessage
 from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import uvicorn
 
@@ -29,6 +30,15 @@ app = FastAPI(
     title="QA Agent API",
     description="API for Quality Assurance agent that processes prompts and returns test results",
     version="1.0.0"
+)
+
+# Add CORS middleware to allow fetch requests
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
 # Get API key from environment
