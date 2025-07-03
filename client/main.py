@@ -124,12 +124,17 @@ When responding:
 - Consider both functional and non-functional testing aspects
 - Document any issues found during browser or crawl testing
 
+CRITICAL INSTRUCTION FOR BROWSER_AGENT:
+- When using browser_agent(), you MUST pass the COMPLETE ORIGINAL USER PROMPT as the parameter
+- Do not modify, summarize, or change the original prompt when calling browser_agent()
+- Always use the exact original user input as the prompt parameter for browser_agent()
+- This ensures the browser agent receives the full context and requirements
+
 IMPORTANT: After your analysis, you must determine if any bugs, errors, or critical issues were found:
 - If you find ANY bugs, errors, broken functionality, missing content, or critical issues, respond with "BUG_DETECTED: " at the beginning of your message
 - If everything appears to be working correctly and no issues are found, respond with "PASSED: " at the beginning of your message
 
-Remember to always prioritize software quality and user experience in your responses.
-Important: send complete prompt to browser_agent()"""),
+Remember to always prioritize software quality and user experience in your responses."""),
             MessagesPlaceholder(variable_name="chat_history"),
             ("human", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),

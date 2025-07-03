@@ -6,11 +6,11 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-BASE_URL = "http://localhost:8000"
-#BASE_URL = "http://64.227.81.67:5001"
+# BASE_URL = "http://localhost:8000"
+BASE_URL = "http://64.227.81.67:5001"
 # Client API base URL
-CLIENT_BASE_URL = "http://localhost:8001"
-#CLIENT_BASE_URL = "http://64.227.81.67:5002"
+# CLIENT_BASE_URL = "http://localhost:8001"
+CLIENT_BASE_URL = "http://64.227.81.67:5002"
 # Get API key from environment
 API_KEY = os.getenv("QA_API_KEY")
 if not API_KEY:
