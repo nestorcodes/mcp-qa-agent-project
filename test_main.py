@@ -7,10 +7,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # BASE_URL = "http://localhost:8000"
-BASE_URL = "http://64.227.81.67:5001"
+BASE_URL = "https://qontrolserver.fliends.com"
 # Client API base URL
 # CLIENT_BASE_URL = "http://localhost:8001"
-CLIENT_BASE_URL = "http://64.227.81.67:5002"
+CLIENT_BASE_URL = "https://qontrolclient.fliends.com"
 # Get API key from environment
 API_KEY = os.getenv("QA_API_KEY")
 if not API_KEY:
@@ -90,6 +90,7 @@ def test_youtube_transcript():
 def test_process_prompt():
     """Test the QA Agent API process-prompt endpoint"""
     prompt = "Entra al contenido de comparasoftware.com y analiza si hay algun error de ortografia o contenido que no sea correcto"
+    # Entra a https://www.comparasoftware.com/ii y analiza si hay algun bug en el contenido.
     payload = {"prompt": prompt}
     
     # Test with valid API key
