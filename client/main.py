@@ -382,17 +382,14 @@ Remember to always prioritize software quality and user experience in your respo
         # Add AI response to chat history
         self.chat_history.append(AIMessage(content=agent_response))
         
-        # Determine status based on agent response
-        if agent_response.startswith("BUG_DETECTED:"):
+        # Simple status determination
+        if "BUG_DETECTED:" in agent_response:
             status = "failed"
-            # Remove the prefix for cleaner console_log
             console_log = agent_response.replace("BUG_DETECTED:", "").strip()
-        elif agent_response.startswith("PASSED:"):
+        elif "PASSED:" in agent_response:
             status = "passed"
-            # Remove the prefix for cleaner console_log
             console_log = agent_response.replace("PASSED:", "").strip()
         else:
-            # Default to failed if no clear status indicator
             status = "passed"
             console_log = agent_response
         
