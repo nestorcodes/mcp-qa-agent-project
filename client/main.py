@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain.agents import AgentExecutor, create_openai_functions_agent
@@ -109,6 +110,46 @@ You have access to powerful tools for comprehensive testing:
 - Ability to verify content accuracy and completeness
 - Tools to detect UI/UX issues and content bugs
 
+CRITICAL ERROR DETECTION REQUIREMENTS:
+You MUST be extremely strict and thorough in detecting ANY of the following issues:
+
+CONTENT QUALITY ISSUES:
+- Spelling errors, typos, or grammatical mistakes
+- Broken or malformed HTML/markdown content
+- Missing or incomplete content
+- Inconsistent formatting or styling
+- Duplicate content or redundant information
+- Content that doesn't match the expected requirements
+
+TECHNICAL ISSUES:
+- HTTP error codes (400, 401, 403, 404, 500, 502, 503, etc.)
+- Connection errors or timeout issues
+- JavaScript errors or console warnings
+- Broken links or missing resources
+- Performance issues or slow loading times
+- Accessibility violations (missing alt text, poor contrast, etc.)
+
+FUNCTIONALITY ISSUES:
+- Broken forms or interactive elements
+- Missing functionality or features
+- Incorrect behavior or unexpected results
+- User interface problems or layout issues
+- Navigation problems or broken user flows
+
+BROWSER AGENT ISSUES:
+- Failed automation tasks
+- Error messages in browser agent results
+- Incomplete or partial task execution
+- Unexpected behavior during automation
+- Timeout or connection issues during browser testing
+
+CRAWLING ISSUES:
+- Empty or minimal content returned
+- Malformed markdown or HTML
+- Missing important page elements
+- Access denied or blocked content
+- Redirect loops or infinite redirects
+
 When performing tests:
 - Use browser automation to validate critical user flows (browser_agent)
 - Crawl websites to verify content integrity and completeness (crawl_website)
@@ -130,11 +171,21 @@ CRITICAL INSTRUCTION FOR BROWSER_AGENT:
 - Always use the exact original user input as the prompt parameter for browser_agent()
 - This ensures the browser agent receives the full context and requirements
 
-IMPORTANT: After your analysis, you must determine if any bugs, errors, or critical issues were found:
-- If you find ANY bugs, errors, broken functionality, missing content, or critical issues, respond with "BUG_DETECTED: " at the beginning of your message
-- If everything appears to be working correctly and no issues are found, respond with "PASSED: " at the beginning of your message
+MANDATORY ERROR DETECTION:
+After analyzing any content or results, you MUST determine if ANY of the following issues exist:
+- ANY spelling errors, typos, or grammatical mistakes
+- ANY HTTP error codes or technical errors
+- ANY broken functionality or missing features
+- ANY content quality issues or inconsistencies
+- ANY browser automation failures or errors
+- ANY crawling issues or incomplete content
 
-Remember to always prioritize software quality and user experience in your responses."""),
+RESPONSE FORMAT:
+- If you find ANY issues (no matter how minor), respond with "BUG_DETECTED: " at the beginning of your message
+- If everything appears to be working correctly and no issues are found, respond with "PASSED: " at the beginning of your message
+- Always provide detailed explanation of what was tested and what issues (if any) were found
+
+Remember to always prioritize software quality and user experience in your responses. Be extremely thorough and don't overlook any potential issues."""),
             MessagesPlaceholder(variable_name="chat_history"),
             ("human", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
@@ -149,6 +200,86 @@ Remember to always prioritize software quality and user experience in your respo
         # create chat history for memory 
         self.chat_history: List[HumanMessage | AIMessage] = []
     
+    def analyze_content_for_errors(self, content: str, content_type: str = "markdown") -> Dict[str, Any]:
+        """Analyze content for common errors and issues."""
+        errors = []
+        warnings = []
+        
+        # Check for HTTP error codes
+        http_error_patterns = [
+            r'\b(400|401|403|404|405|408|409|410|411|412|413|414|415|416|417|418|421|422|423|424|425|426|428|429|431|451)\b',
+            r'\b(500|501|502|503|504|505|506|507|508|510|511)\b',
+            r'\b(HTTP|http)\s+error\s+\d{3}\b',
+            r'\b(Error|ERROR)\s+\d{3}\b'
+        ]
+        
+        for pattern in http_error_patterns:
+            matches = re.findall(pattern, content, re.IGNORECASE)
+            if matches:
+                errors.append(f"HTTP Error detected: {', '.join(set(matches))}")
+        
+        # Check for common error messages
+        error_patterns = [
+            r'\b(error|Error|ERROR)\b',
+            r'\b(failed|Failed|FAILED)\b',
+            r'\b(timeout|Timeout|TIMEOUT)\b',
+            r'\b(not found|Not Found|NOT FOUND)\b',
+            r'\b(access denied|Access Denied|ACCESS DENIED)\b',
+            r'\b(forbidden|Forbidden|FORBIDDEN)\b',
+            r'\b(unauthorized|Unauthorized|UNAUTHORIZED)\b',
+            r'\b(server error|Server Error|SERVER ERROR)\b',
+            r'\b(bad request|Bad Request|BAD REQUEST)\b',
+            r'\b(internal server error|Internal Server Error)\b'
+        ]
+        
+        for pattern in error_patterns:
+            matches = re.findall(pattern, content, re.IGNORECASE)
+            if matches:
+                errors.append(f"Error message detected: {', '.join(set(matches))}")
+        
+        # Check for empty or minimal content
+        if len(content.strip()) < 50:
+            errors.append("Content is too short or empty")
+        
+        # Check for malformed markdown (basic checks)
+        if content_type == "markdown":
+            # Check for broken links
+            broken_link_patterns = [
+                r'\[([^\]]+)\]\(\)',  # Empty links
+                r'\[([^\]]+)\]\([^)]*error[^)]*\)',  # Links with error in URL
+                r'\[([^\]]+)\]\([^)]*404[^)]*\)',  # Links with 404 in URL
+            ]
+            
+            for pattern in broken_link_patterns:
+                matches = re.findall(pattern, content, re.IGNORECASE)
+                if matches:
+                    errors.append(f"Broken links detected: {', '.join(set(matches))}")
+        
+        # Check for browser agent specific errors
+        if "browser" in content_type.lower():
+            browser_error_patterns = [
+                r'\b(element not found|Element not found)\b',
+                r'\b(cannot find element|Cannot find element)\b',
+                r'\b(timeout waiting for|Timeout waiting for)\b',
+                r'\b(failed to click|Failed to click)\b',
+                r'\b(failed to type|Failed to type)\b',
+                r'\b(page not loaded|Page not loaded)\b',
+                r'\b(navigation failed|Navigation failed)\b'
+            ]
+            
+            for pattern in browser_error_patterns:
+                matches = re.findall(pattern, content, re.IGNORECASE)
+                if matches:
+                    errors.append(f"Browser automation error: {', '.join(set(matches))}")
+        
+        return {
+            "has_errors": len(errors) > 0,
+            "has_warnings": len(warnings) > 0,
+            "errors": errors,
+            "warnings": warnings,
+            "content_length": len(content)
+        }
+    
     # crawl website function for tool
     def crawl_website(self, url: str) -> str:
         """Crawl a website and return its markdown content for content analysis."""
@@ -162,7 +293,28 @@ Remember to always prioritize software quality and user experience in your respo
             )
             response.raise_for_status()
             result = response.json()
-            return f"Successfully crawled {url}. Content length: {len(result['markdown_content'])} characters.\n\nContent preview:\n{result['markdown_content'][:500]}..."
+            
+            # Analyze the content for errors
+            content_analysis = self.analyze_content_for_errors(result['markdown_content'], "markdown")
+            
+            # Build response with error analysis
+            response_text = f"Successfully crawled {url}. Content length: {len(result['markdown_content'])} characters.\n\n"
+            
+            if content_analysis['has_errors']:
+                response_text += "🚨 ERRORS DETECTED IN CONTENT:\n"
+                for error in content_analysis['errors']:
+                    response_text += f"  - {error}\n"
+                response_text += "\n"
+            
+            if content_analysis['has_warnings']:
+                response_text += "⚠️ WARNINGS DETECTED IN CONTENT:\n"
+                for warning in content_analysis['warnings']:
+                    response_text += f"  - {warning}\n"
+                response_text += "\n"
+            
+            response_text += f"Content preview:\n{result['markdown_content'][:500]}..."
+            
+            return response_text
         except Exception as e:
             return f"Error crawling website {url}: {str(e)}"
     
@@ -179,7 +331,28 @@ Remember to always prioritize software quality and user experience in your respo
             )
             response.raise_for_status()
             result = response.json()
-            return f"Browser agent completed task: {prompt}\n\nResult: {result['result']}"
+            
+            # Analyze the browser agent result for errors
+            content_analysis = self.analyze_content_for_errors(result['result'], "browser_agent")
+            
+            # Build response with error analysis
+            response_text = f"Browser agent completed task: {prompt}\n\n"
+            
+            if content_analysis['has_errors']:
+                response_text += "🚨 ERRORS DETECTED IN BROWSER AGENT RESULT:\n"
+                for error in content_analysis['errors']:
+                    response_text += f"  - {error}\n"
+                response_text += "\n"
+            
+            if content_analysis['has_warnings']:
+                response_text += "⚠️ WARNINGS DETECTED IN BROWSER AGENT RESULT:\n"
+                for warning in content_analysis['warnings']:
+                    response_text += f"  - {warning}\n"
+                response_text += "\n"
+            
+            response_text += f"Result: {result['result']}"
+            
+            return response_text
         except Exception as e:
             return f"Error running browser agent: {str(e)}"
     
