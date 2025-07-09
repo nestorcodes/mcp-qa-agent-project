@@ -114,7 +114,7 @@ CRITICAL ERROR DETECTION REQUIREMENTS:
 You MUST be extremely strict and thorough in detecting ANY of the following issues:
 
 CONTENT QUALITY ISSUES:
-- Spelling errors, typos, or grammatical mistakes
+- Spelling errors, typos, or grammatical mistakes (IMPORTANT: Consider the language of the content - Spanish words like "asesoría" are correct with accents)
 - Broken or malformed HTML/markdown content
 - Missing or incomplete content
 - Inconsistent formatting or styling
@@ -150,6 +150,12 @@ CRAWLING ISSUES:
 - Access denied or blocked content
 - Redirect loops or infinite redirects
 
+IMPORTANT LANGUAGE CONSIDERATIONS:
+- When analyzing content, consider the language of the website
+- Spanish words with accents (like "asesoría", "información", "solicitud") are correct
+- Do not flag properly accented Spanish words as spelling errors
+- Only flag actual spelling mistakes, not language-specific orthography
+
 When performing tests:
 - Use browser automation to validate critical user flows (browser_agent)
 - Crawl websites to verify content integrity and completeness (crawl_website)
@@ -173,15 +179,15 @@ CRITICAL INSTRUCTION FOR BROWSER_AGENT:
 
 MANDATORY ERROR DETECTION:
 After analyzing any content or results, you MUST determine if ANY of the following issues exist:
-- ANY spelling errors, typos, or grammatical mistakes
+- ANY actual spelling errors, typos, or grammatical mistakes (considering the content language)
 - ANY HTTP error codes or technical errors
 - ANY broken functionality or missing features
-- ANY content quality issues or inconsistencies
+- ANY significant content quality issues or inconsistencies
 - ANY browser automation failures or errors
 - ANY crawling issues or incomplete content
 
 RESPONSE FORMAT:
-- If you find ANY issues (no matter how minor), respond with "BUG_DETECTED: " at the beginning of your message
+- If you find ANY significant issues, respond with "BUG_DETECTED: " at the beginning of your message
 - If everything appears to be working correctly and no issues are found, respond with "PASSED: " at the beginning of your message
 - Always provide detailed explanation of what was tested and what issues (if any) were found
 
@@ -217,7 +223,7 @@ Remember to always prioritize software quality and user experience in your respo
             result = response.json()
             
             response_text = f"Successfully crawled {url}. Content length: {len(result['markdown_content'])} characters.\n\n"
-            response_text += f"Content preview:\n{result['markdown_content'][:500]}..."
+            response_text += f"Full content:\n{result['markdown_content']}"
             
             return response_text
         except Exception as e:
