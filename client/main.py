@@ -200,85 +200,7 @@ Remember to always prioritize software quality and user experience in your respo
         # create chat history for memory 
         self.chat_history: List[HumanMessage | AIMessage] = []
     
-    def analyze_content_for_errors(self, content: str, content_type: str = "markdown") -> Dict[str, Any]:
-        """Analyze content for common errors and issues."""
-        errors = []
-        warnings = []
-        
-        # Check for HTTP error codes
-        http_error_patterns = [
-            r'\b(400|401|403|404|405|408|409|410|411|412|413|414|415|416|417|418|421|422|423|424|425|426|428|429|431|451)\b',
-            r'\b(500|501|502|503|504|505|506|507|508|510|511)\b',
-            r'\b(HTTP|http)\s+error\s+\d{3}\b',
-            r'\b(Error|ERROR)\s+\d{3}\b'
-        ]
-        
-        for pattern in http_error_patterns:
-            matches = re.findall(pattern, content, re.IGNORECASE)
-            if matches:
-                errors.append(f"HTTP Error detected: {', '.join(set(matches))}")
-        
-        # Check for common error messages
-        error_patterns = [
-            r'\b(error|Error|ERROR)\b',
-            r'\b(failed|Failed|FAILED)\b',
-            r'\b(timeout|Timeout|TIMEOUT)\b',
-            r'\b(not found|Not Found|NOT FOUND)\b',
-            r'\b(access denied|Access Denied|ACCESS DENIED)\b',
-            r'\b(forbidden|Forbidden|FORBIDDEN)\b',
-            r'\b(unauthorized|Unauthorized|UNAUTHORIZED)\b',
-            r'\b(server error|Server Error|SERVER ERROR)\b',
-            r'\b(bad request|Bad Request|BAD REQUEST)\b',
-            r'\b(internal server error|Internal Server Error)\b'
-        ]
-        
-        for pattern in error_patterns:
-            matches = re.findall(pattern, content, re.IGNORECASE)
-            if matches:
-                errors.append(f"Error message detected: {', '.join(set(matches))}")
-        
-        # Check for empty or minimal content
-        if len(content.strip()) < 50:
-            errors.append("Content is too short or empty")
-        
-        # Check for malformed markdown (basic checks)
-        if content_type == "markdown":
-            # Check for broken links
-            broken_link_patterns = [
-                r'\[([^\]]+)\]\(\)',  # Empty links
-                r'\[([^\]]+)\]\([^)]*error[^)]*\)',  # Links with error in URL
-                r'\[([^\]]+)\]\([^)]*404[^)]*\)',  # Links with 404 in URL
-            ]
-            
-            for pattern in broken_link_patterns:
-                matches = re.findall(pattern, content, re.IGNORECASE)
-                if matches:
-                    errors.append(f"Broken links detected: {', '.join(set(matches))}")
-        
-        # Check for browser agent specific errors
-        if "browser" in content_type.lower():
-            browser_error_patterns = [
-                r'\b(element not found|Element not found)\b',
-                r'\b(cannot find element|Cannot find element)\b',
-                r'\b(timeout waiting for|Timeout waiting for)\b',
-                r'\b(failed to click|Failed to click)\b',
-                r'\b(failed to type|Failed to type)\b',
-                r'\b(page not loaded|Page not loaded)\b',
-                r'\b(navigation failed|Navigation failed)\b'
-            ]
-            
-            for pattern in browser_error_patterns:
-                matches = re.findall(pattern, content, re.IGNORECASE)
-                if matches:
-                    errors.append(f"Browser automation error: {', '.join(set(matches))}")
-        
-        return {
-            "has_errors": len(errors) > 0,
-            "has_warnings": len(warnings) > 0,
-            "errors": errors,
-            "warnings": warnings,
-            "content_length": len(content)
-        }
+
     
     # crawl website function for tool
     def crawl_website(self, url: str) -> str:
@@ -294,24 +216,7 @@ Remember to always prioritize software quality and user experience in your respo
             response.raise_for_status()
             result = response.json()
             
-            # Analyze the content for errors
-            content_analysis = self.analyze_content_for_errors(result['markdown_content'], "markdown")
-            
-            # Build response with error analysis
             response_text = f"Successfully crawled {url}. Content length: {len(result['markdown_content'])} characters.\n\n"
-            
-            if content_analysis['has_errors']:
-                response_text += "🚨 ERRORS DETECTED IN CONTENT:\n"
-                for error in content_analysis['errors']:
-                    response_text += f"  - {error}\n"
-                response_text += "\n"
-            
-            if content_analysis['has_warnings']:
-                response_text += "⚠️ WARNINGS DETECTED IN CONTENT:\n"
-                for warning in content_analysis['warnings']:
-                    response_text += f"  - {warning}\n"
-                response_text += "\n"
-            
             response_text += f"Content preview:\n{result['markdown_content'][:500]}..."
             
             return response_text
@@ -332,24 +237,7 @@ Remember to always prioritize software quality and user experience in your respo
             response.raise_for_status()
             result = response.json()
             
-            # Analyze the browser agent result for errors
-            content_analysis = self.analyze_content_for_errors(result['result'], "browser_agent")
-            
-            # Build response with error analysis
             response_text = f"Browser agent completed task: {prompt}\n\n"
-            
-            if content_analysis['has_errors']:
-                response_text += "🚨 ERRORS DETECTED IN BROWSER AGENT RESULT:\n"
-                for error in content_analysis['errors']:
-                    response_text += f"  - {error}\n"
-                response_text += "\n"
-            
-            if content_analysis['has_warnings']:
-                response_text += "⚠️ WARNINGS DETECTED IN BROWSER AGENT RESULT:\n"
-                for warning in content_analysis['warnings']:
-                    response_text += f"  - {warning}\n"
-                response_text += "\n"
-            
             response_text += f"Result: {result['result']}"
             
             return response_text

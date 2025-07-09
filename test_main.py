@@ -50,7 +50,7 @@ def test_root():
     print("✅ Test root endpoint passed")
 
 def test_crawl():
-    url = "https://www.comparasoftware.com"
+    url = "https://comparasoftware.com/perfex-crm"
     payload = {"url": url}
     response = requests.post(f"{BASE_URL}/crawl", json=payload, headers=HEADERS)
     assert response.status_code == 200
