@@ -219,11 +219,7 @@ Remember to always prioritize software quality and user experience in your respo
         self.agent = create_openai_functions_agent(self.llm, self.tools, self.prompt)
 
         # create executor with agent and tools context
-        self.agent_executor = AgentExecutor(agent=self.agent, tools=self.tools, verbose=True)
-
-        # No chat history - each request is processed independently
-        pass
-    
+        self.agent_executor = AgentExecutor(agent=self.agent, tools=self.tools, verbose=True)    
 
     
     # crawl website function for tool
