@@ -8,7 +8,7 @@ from langchain.tools import Tool
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 import requests
 from typing import Dict, Any, List
-from langchain.schema import HumanMessage, AIMessage
+
 from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -221,8 +221,8 @@ Remember to always prioritize software quality and user experience in your respo
         # create executor with agent and tools context
         self.agent_executor = AgentExecutor(agent=self.agent, tools=self.tools, verbose=True)
 
-        # create chat history for memory 
-        self.chat_history: List[HumanMessage | AIMessage] = []
+        # No chat history - each request is processed independently
+        pass
     
 
     
@@ -269,12 +269,8 @@ Remember to always prioritize software quality and user experience in your respo
             return f"Error running browser agent: {str(e)}"
     
     # process request function 
-    # add user message to chat history
     def process_request(self, user_input: str) -> Dict[str, Any]:
         """Process a user request using the QA agent and return JSON with status and console_log."""
-        # Add user message to chat history
-        self.chat_history.append(HumanMessage(content=user_input))
-        
         # Create a custom agent executor that limits to one tool use
         single_tool_executor = AgentExecutor(
             agent=self.agent,
@@ -282,17 +278,13 @@ Remember to always prioritize software quality and user experience in your respo
             verbose=True # Limit to one tool use per request
         )
         
-        # Process the request with chat history
+        # Process the request without chat history (stateless)
         result = single_tool_executor.invoke({
-            "input": user_input,
-            "chat_history": self.chat_history
+            "input": user_input
         })
         
         # Get the agent's response
         agent_response = result["output"]
-        
-        # Add AI response to chat history
-        self.chat_history.append(AIMessage(content=agent_response))
         
         # Simple status determination
         if "BUG_DETECTED:" in agent_response:
