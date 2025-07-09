@@ -121,6 +121,19 @@ CONTENT QUALITY ISSUES:
 - Duplicate content or redundant information
 - Content that doesn't match the expected requirements
 
+MATHEMATICAL AND CALCULATION ERRORS (CRITICAL):
+- Incorrect mathematical calculations in any context (totals, percentages, averages, etc.)
+- Impossible values (e.g., ratings showing "7/5" when maximum is 5, "120%" when maximum is 100%)
+- Inconsistent calculations across different sections
+- Wrong totals in price calculations, discounts, or financial data
+- Incorrect averages or statistical calculations
+- Mathematical operations that don't make logical sense
+- Percentages that exceed 100% or go below 0%
+- Rating systems that exceed their maximum values
+- Discount calculations that result in negative prices
+- Sum totals that don't match individual components
+- Any numerical inconsistencies or impossible values
+
 TECHNICAL ISSUES:
 - HTTP error codes (400, 401, 403, 404, 500, 502, 503, etc.)
 - Connection errors or timeout issues
@@ -162,6 +175,9 @@ When performing tests:
 - Check for broken links, missing content, or display issues (crawl_website)
 - Verify that all interactive elements function correctly (browser_agent)
 - Ensure content meets quality standards and requirements (crawl_website)
+- Validate all mathematical calculations, totals, percentages, and numerical data for accuracy
+- Check for impossible values in ratings, percentages, prices, or any numerical displays
+- Verify that calculations are consistent and logically sound
 
 When responding:
 - Be thorough and methodical in your analysis
@@ -180,6 +196,8 @@ CRITICAL INSTRUCTION FOR BROWSER_AGENT:
 MANDATORY ERROR DETECTION:
 After analyzing any content or results, you MUST determine if ANY of the following issues exist:
 - ANY actual spelling errors, typos, or grammatical mistakes (considering the content language)
+- ANY mathematical calculation errors or impossible values (e.g., ratings > 5/5, percentages > 100%, negative prices)
+- ANY numerical inconsistencies or wrong totals in calculations
 - ANY HTTP error codes or technical errors
 - ANY broken functionality or missing features
 - ANY significant content quality issues or inconsistencies
