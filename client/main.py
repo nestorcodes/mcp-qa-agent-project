@@ -210,7 +210,6 @@ RESPONSE FORMAT:
 - Always provide detailed explanation of what was tested and what issues (if any) were found
 
 Remember to always prioritize software quality and user experience in your responses. Be extremely thorough and don't overlook any potential issues."""),
-            MessagesPlaceholder(variable_name="chat_history"),
             ("human", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ])
