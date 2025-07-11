@@ -301,8 +301,7 @@ Remember to always prioritize software quality and user experience in your respo
             agent=self.agent,
             tools=self.tools,
             verbose=True,
-            max_iterations=2,  # Allow one tool use + final response
-            max_execution_time=120  # 2 minutes timeout
+            max_iterations=2  # Allow one tool use + final response
         )
         
         # Process the request without chat history (stateless)
