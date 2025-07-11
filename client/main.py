@@ -190,6 +190,9 @@ IMPORTANT LANGUAGE CONSIDERATIONS:
 - Only flag actual spelling mistakes, not language-specific orthography
 
 CRITICAL TOOL USAGE RULES:
+- You MUST choose ONLY ONE tool per request: either crawl_website OR browser_agent, never both
+- Choose crawl_website() for content analysis, spelling checks, and mathematical error detection
+- Choose browser_agent() for functional testing, link verification, and interactive element testing
 - When using crawl_website(): ONLY report content quality issues, spelling errors, mathematical errors, and content completeness
 - When using crawl_website(): DO NOT report broken links, non-functional CTAs, or interactive element issues
 - When using crawl_website(): DO NOT assume links are broken just because you can't test them
@@ -298,7 +301,8 @@ Remember to always prioritize software quality and user experience in your respo
             agent=self.agent,
             tools=self.tools,
             verbose=True,
-            max_iterations=1  # Limit to one tool use per request
+            max_iterations=2,  # Allow one tool use + final response
+            max_execution_time=120  # 2 minutes timeout
         )
         
         # Process the request without chat history (stateless)
