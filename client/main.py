@@ -110,6 +110,25 @@ You have access to powerful tools for comprehensive testing:
 - Ability to verify content accuracy and completeness
 - Tools to detect UI/UX issues and content bugs
 
+TOOL LIMITATIONS AND CAPABILITIES:
+
+CRAWL_WEBSITE TOOL LIMITATIONS:
+- This tool ONLY extracts static content and converts it to markdown format
+- It CANNOT verify if links are working or broken
+- It CANNOT test interactive elements like buttons, forms, or modals
+- It CANNOT execute JavaScript or test dynamic functionality
+- It CANNOT determine if CTAs (Call-to-Action buttons) are functional
+- It CANNOT test user flows or interactions
+- It ONLY provides the raw content structure and text
+
+BROWSER_AGENT TOOL CAPABILITIES:
+- This tool CAN test interactive elements, buttons, forms, and modals
+- This tool CAN verify if links are working or broken
+- This tool CAN test user flows and interactions
+- This tool CAN execute JavaScript and test dynamic functionality
+- This tool CAN test CTAs and user journeys
+- This tool provides actual functional testing capabilities
+
 CRITICAL ERROR DETECTION REQUIREMENTS:
 You MUST be extremely strict and thorough in detecting ANY of the following issues:
 
@@ -134,20 +153,21 @@ MATHEMATICAL AND CALCULATION ERRORS (CRITICAL):
 - Sum totals that don't match individual components
 - Any numerical inconsistencies or impossible values
 
-TECHNICAL ISSUES:
+TECHNICAL ISSUES (ONLY WHEN USING BROWSER_AGENT):
 - HTTP error codes (400, 401, 403, 404, 500, 502, 503, etc.)
 - Connection errors or timeout issues
 - JavaScript errors or console warnings
-- Broken links or missing resources
+- Broken links or missing resources (ONLY detectable via browser_agent)
 - Performance issues or slow loading times
 - Accessibility violations (missing alt text, poor contrast, etc.)
 
-FUNCTIONALITY ISSUES:
+FUNCTIONALITY ISSUES (ONLY WHEN USING BROWSER_AGENT):
 - Broken forms or interactive elements
 - Missing functionality or features
 - Incorrect behavior or unexpected results
 - User interface problems or layout issues
 - Navigation problems or broken user flows
+- Non-functional CTAs, buttons, or modals
 
 BROWSER AGENT ISSUES:
 - Failed automation tasks
@@ -169,12 +189,18 @@ IMPORTANT LANGUAGE CONSIDERATIONS:
 - Do not flag properly accented Spanish words as spelling errors
 - Only flag actual spelling mistakes, not language-specific orthography
 
+CRITICAL TOOL USAGE RULES:
+- When using crawl_website(): ONLY report content quality issues, spelling errors, mathematical errors, and content completeness
+- When using crawl_website(): DO NOT report broken links, non-functional CTAs, or interactive element issues
+- When using crawl_website(): DO NOT assume links are broken just because you can't test them
+- When using browser_agent(): You CAN report broken links, non-functional CTAs, and interactive element issues
+- When using browser_agent(): You CAN test user flows and verify functionality
+
 When performing tests:
-- Use browser automation to validate critical user flows (browser_agent)
-- Crawl websites to verify content integrity and completeness (crawl_website)
-- Check for broken links, missing content, or display issues (crawl_website)
-- Verify that all interactive elements function correctly (browser_agent)
-- Ensure content meets quality standards and requirements (crawl_website)
+- Use browser automation to validate critical user flows and interactive elements (browser_agent)
+- Crawl websites to verify content integrity, completeness, and quality (crawl_website)
+- Use crawl_website for content analysis only, not functional testing
+- Use browser_agent for functional testing, link verification, and user interaction testing
 - Validate all mathematical calculations, totals, percentages, and numerical data for accuracy
 - Check for impossible values in ratings, percentages, prices, or any numerical displays
 - Verify that calculations are consistent and logically sound
@@ -186,6 +212,7 @@ When responding:
 - Maintain a professional and constructive tone
 - Consider both functional and non-functional testing aspects
 - Document any issues found during browser or crawl testing
+- Clearly distinguish between content issues (crawl_website) and functional issues (browser_agent)
 
 CRITICAL INSTRUCTION FOR BROWSER_AGENT:
 - When using browser_agent(), you MUST pass the COMPLETE ORIGINAL USER PROMPT as the parameter
@@ -198,8 +225,8 @@ After analyzing any content or results, you MUST determine if ANY of the followi
 - ANY actual spelling errors, typos, or grammatical mistakes (considering the content language)
 - ANY mathematical calculation errors or impossible values (e.g., ratings > 5/5, percentages > 100%, negative prices)
 - ANY numerical inconsistencies or wrong totals in calculations
-- ANY HTTP error codes or technical errors
-- ANY broken functionality or missing features
+- ANY HTTP error codes or technical errors (only when using browser_agent)
+- ANY broken functionality or missing features (only when using browser_agent)
 - ANY significant content quality issues or inconsistencies
 - ANY browser automation failures or errors
 - ANY crawling issues or incomplete content
@@ -209,7 +236,7 @@ RESPONSE FORMAT:
 - If everything appears to be working correctly and no issues are found, respond with "PASSED: " at the beginning of your message
 - Always provide detailed explanation of what was tested and what issues (if any) were found
 
-Remember to always prioritize software quality and user experience in your responses. Be extremely thorough and don't overlook any potential issues."""),
+Remember to always prioritize software quality and user experience in your responses. Be extremely thorough and don't overlook any potential issues, but respect the limitations of each tool."""),
             ("human", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ])
@@ -270,7 +297,8 @@ Remember to always prioritize software quality and user experience in your respo
         single_tool_executor = AgentExecutor(
             agent=self.agent,
             tools=self.tools,
-            verbose=True # Limit to one tool use per request
+            verbose=True,
+            max_iterations=1  # Limit to one tool use per request
         )
         
         # Process the request without chat history (stateless)

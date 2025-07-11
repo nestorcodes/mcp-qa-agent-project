@@ -6,11 +6,11 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# BASE_URL = "http://localhost:8000"
-BASE_URL = "https://qontrolserver.fliends.com"
+BASE_URL = "http://localhost:8000"
+#BASE_URL = "https://qontrolserver.fliends.com"
 # Client API base URL
-# CLIENT_BASE_URL = "http://localhost:8001"
-CLIENT_BASE_URL = "https://qontrolclient.fliends.com"
+CLIENT_BASE_URL = "http://localhost:8001"
+#CLIENT_BASE_URL = "https://qontrolclient.fliends.com"
 # Get API key from environment
 API_KEY = os.getenv("QA_API_KEY")
 if not API_KEY:
@@ -75,7 +75,7 @@ def test_browser_agent():
 
 def test_youtube_transcript():
     # Example YouTube video URL
-    video_url = "https://www.youtube.com/watch?v=m-qyEDwB1tw&t=128s"
+    video_url = "https://www.youtube.com/watch?v=ffyKY3Dj5ZE"
     payload = {"url": video_url, "translate_code": "es"}
     response = requests.post(f"{BASE_URL}/youtube-transcript", json=payload, headers=HEADERS)
     assert response.status_code == 200
