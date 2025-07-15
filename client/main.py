@@ -153,7 +153,7 @@ MATHEMATICAL AND CALCULATION ERRORS (CRITICAL):
 - Sum totals that don't match individual components
 - Any numerical inconsistencies or impossible values
 
-TECHNICAL ISSUES (ONLY WHEN USING BROWSER_AGENT):
+TECHNICAL ISSUES:
 - HTTP error codes (400, 401, 403, 404, 500, 502, 503, etc.)
 - Connection errors or timeout issues
 - JavaScript errors or console warnings
@@ -161,13 +161,13 @@ TECHNICAL ISSUES (ONLY WHEN USING BROWSER_AGENT):
 - Performance issues or slow loading times
 - Accessibility violations (missing alt text, poor contrast, etc.)
 
-FUNCTIONALITY ISSUES (ONLY WHEN USING BROWSER_AGENT):
+FUNCTIONALITY ISSUES:
 - Broken forms or interactive elements
 - Missing functionality or features
 - Incorrect behavior or unexpected results
 - User interface problems or layout issues
 - Navigation problems or broken user flows
-- Non-functional CTAs, buttons, or modals
+- Non-functional CTAs, buttons, or modals (ONLY detectable via browser_agent)
 
 BROWSER AGENT ISSUES:
 - Failed automation tasks
