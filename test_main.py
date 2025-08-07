@@ -365,7 +365,7 @@ if __name__ == "__main__":
     print(f"Server API URL: {BASE_URL}")
     print(f"Client API URL: {CLIENT_BASE_URL}")
     print(f"Asesor Client API URL: http://localhost:8011")
-    print(f"Auditor Client API URL: http://localhost:8021")
+    print(f"Auditor Client API URL: https://diticlient.fliends.com")
     print()
     
     while True:

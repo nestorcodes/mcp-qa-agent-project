@@ -70,7 +70,7 @@ class AuditorAgent:
             raise ValueError("OPENAI_API_KEY not found in environment variables")
         self.server_url = os.getenv("AUDITOR_SERVER_URL", "http://localhost:8020")
         self.auditor_api_key = os.getenv("AUDITOR_API_KEY", "demo-key")
-        self.llm = ChatOpenAI(model="gpt-4", temperature=0.1, api_key=self.api_key)
+        self.llm = ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0.1, api_key=self.api_key)
         
         self.tools = [
             Tool(
