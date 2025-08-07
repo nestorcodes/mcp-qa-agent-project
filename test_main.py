@@ -2,6 +2,7 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment variables
 load_dotenv()
@@ -156,6 +157,128 @@ def test_client_root():
     assert "endpoints" in data
     print("✅ Test client root endpoint passed")
 
+def test_asesor_webhook_curl():
+    """Test the Asesor Agent webhook endpoint using curl-like request"""
+    import subprocess
+    import json
+    
+    url = "http://localhost:8021/webhook"
+    headers = {
+        "Content-Type": "application/json",
+        "x-api-key": "demo-key"
+    }
+    convo_id = "prueba123"
+    print("\n--- Asesor Agent Interactive Chat ---")
+    print("Type 'exit' to end the conversation.")
+    
+    while True:
+        user_message = input("You: ")
+        if user_message.lower() == 'exit':
+            print("Ending chat.")
+            break
+
+        payload = {
+            "message": user_message,
+            "convo_id": convo_id
+        }
+        
+        try:
+            response = requests.post(url, json=payload, headers=headers)
+            response.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+            data = response.json()
+            
+            if "reply" in data:
+                print(f"Asesor: {data['reply']}")
+            else:
+                print("Asesor: No reply received.")
+            
+            if "convo_id" in data:
+                convo_id = data["convo_id"] # Update convo_id if returned
+
+        except requests.exceptions.ConnectionError:
+            print("❌ Error: Could not connect to asesor client server.")
+            print("   Make sure the asesor client is running on localhost:8011")
+            break
+        except requests.exceptions.HTTPError as e:
+            print(f"❌ HTTP Error: {e.response.status_code} - {e.response.text}")
+            break
+        except Exception as e:
+            print(f"❌ Error testing asesor webhook: {str(e)}")
+            break
+    print("✅ Asesor Agent interactive chat ended.")
+
+def test_auditor_webhook_curl():
+    """Test the Auditor Agent webhook endpoint using curl-like request"""
+    import subprocess
+    import json
+    
+    url = "http://localhost:8021/webhook"
+    headers = {
+        "Content-Type": "application/json",
+        "x-api-key": "demo-key"
+    }
+    convo_id = "auditor_test_123"
+    print("\n--- Auditor Agent Interactive Chat ---")
+    print("Type 'exit' to end the conversation.")
+    print("Type 'status' to see conversation status.")
+    print("Type 'reset' to start a new conversation.")
+    
+    while True:
+        user_message = input("You: ")
+        if user_message.lower() == 'exit':
+            print("Ending chat.")
+            break
+        elif user_message.lower() == 'status':
+            try:
+                response = requests.get(f"http://localhost:8021/analysis/{convo_id}", headers=headers)
+                if response.status_code == 200:
+                    data = response.json()
+                    print(f"Status: {data.get('stage', 'unknown')}")
+                    print(f"Progress: {data.get('context', {}).get('progress', 0)}/6")
+                    print(f"Contact: {data.get('context', {}).get('contact_name', 'Not specified')}")
+                    print(f"Company: {data.get('context', {}).get('company_sector', 'Not specified')}")
+                else:
+                    print("Could not get status.")
+            except Exception as e:
+                print(f"Error getting status: {e}")
+            continue
+        elif user_message.lower() == 'reset':
+            convo_id = f"auditor_test_{int(datetime.now().timestamp())}"
+            print(f"New conversation ID: {convo_id}")
+            continue
+
+        payload = {
+            "message": user_message,
+            "convo_id": convo_id
+        }
+        
+        try:
+            response = requests.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+            data = response.json()
+            
+            if "reply" in data:
+                print(f"Auditor: {data['reply']}")
+                if data.get("stage"):
+                    print(f"[Stage: {data['stage']}]")
+            else:
+                print("Auditor: No reply received.")
+            
+            if "convo_id" in data:
+                convo_id = data["convo_id"]
+
+        except requests.exceptions.ConnectionError:
+            print("❌ Error: Could not connect to auditor client server.")
+            print("   Make sure the auditor client is running on localhost:8021")
+            break
+        except requests.exceptions.HTTPError as e:
+            print(f"❌ HTTP Error: {e.response.status_code} - {e.response.text}")
+            break
+        except Exception as e:
+            print(f"❌ Error testing auditor webhook: {str(e)}")
+            break
+    print("✅ Auditor Agent interactive chat ended.")
+
 def show_menu():
     print("\n🧪 API Test Menu")
     print("=" * 50)
@@ -172,9 +295,13 @@ def show_menu():
     print("8. Test process-prompt without auth (should fail)")
     print("9. Test process-prompt with wrong auth (should fail)")
     print()
-    print("10. Run all server tests")
-    print("11. Run all client tests")
-    print("12. Run all tests")
+    print("Agent Tests:")
+    print("10. Test asesor webhook (curl-like)")
+    print("11. Test auditor webhook (curl-like)")
+    print()
+    print("12. Run all server tests")
+    print("13. Run all client tests")
+    print("14. Run all tests")
     print("0. Exit")
     print("=" * 50)
 
@@ -198,19 +325,23 @@ def run_test(choice):
     elif choice == 9:
         test_process_prompt_wrong_auth()
     elif choice == 10:
+        test_asesor_webhook_curl()
+    elif choice == 11:
+        test_auditor_webhook_curl()
+    elif choice == 12:
         print("Running all server tests...")
         test_root()
         test_crawl()
         test_browser_agent()
         test_youtube_transcript()
-    elif choice == 11:
+    elif choice == 13:
         print("Running all client tests...")
         test_client_health()
         test_client_root()
         test_process_prompt()
         test_process_prompt_no_auth()
         test_process_prompt_wrong_auth()
-    elif choice == 12:
+    elif choice == 14:
         print("Running all tests...")
         print("\n--- Server Tests ---")
         test_root()
@@ -223,25 +354,30 @@ def run_test(choice):
         test_process_prompt()
         test_process_prompt_no_auth()
         test_process_prompt_wrong_auth()
+        print("\n--- Agent Tests ---")
+        test_asesor_webhook_curl()
+        test_auditor_webhook_curl()
     else:
-        print("❌ Invalid choice. Please select a number between 0-12.")
+        print("❌ Invalid choice. Please select a number between 0-14.")
 
 if __name__ == "__main__":
     print("🧪 Starting API tests...\n")
     print(f"Server API URL: {BASE_URL}")
     print(f"Client API URL: {CLIENT_BASE_URL}")
+    print(f"Asesor Client API URL: http://localhost:8011")
+    print(f"Auditor Client API URL: http://localhost:8021")
     print()
     
     while True:
         show_menu()
         try:
-            choice = int(input("Enter your choice (0-12): "))
+            choice = int(input("Enter your choice (0-14): "))
             
             if choice == 0:
                 print("👋 Goodbye!")
                 break
             
-            if 1 <= choice <= 12:
+            if 1 <= choice <= 14:
                 try:
                     run_test(choice)
                     print("\n✨ Test(s) completed successfully!")
@@ -259,7 +395,7 @@ if __name__ == "__main__":
                 except Exception as e:
                     print(f"\n❌ Unexpected error: {str(e)}")
             else:
-                print("❌ Invalid choice. Please select a number between 0-12.")
+                print("❌ Invalid choice. Please select a number between 0-14.")
                 
         except ValueError:
             print("❌ Please enter a valid number.")

@@ -1,6 +1,26 @@
-# MCP QA agent with OpenAI Integration
+# MCP QA Agent Project - Agentes Inteligentes
 
-## Environment Configuration
+Este proyecto incluye múltiples agentes inteligentes basados en OpenAI y LangChain para diferentes propósitos empresariales.
+
+## 🤖 Agentes Disponibles
+
+### 1. Agente QA (Original)
+- **Propósito**: Sistema de preguntas y respuestas inteligente
+- **Archivos**: `client/main.py`, `server/main.py`
+- **Puertos**: Cliente 8001, Servidor 8000
+
+### 2. Agente Asesor (Nuevo)
+- **Propósito**: Asesoría virtual para comparación de software empresarial
+- **Archivos**: `client/main_asesor.py`, `server/main_asesor.py`
+- **Puertos**: Cliente 8011, Servidor 8010
+
+### 3. Agente Auditor (Nuevo) ⭐
+- **Propósito**: Auditoría de procesos e infraestructura tecnológica para transformación digital
+- **Archivos**: `client/main_auditor.py`, `server/main_auditor.py`
+- **Puertos**: Cliente 8021, Servidor 8020
+- **Documentación**: Ver [README_AUDITOR.md](README_AUDITOR.md)
+
+## 🚀 Configuración del Entorno
 
 1. Create a virtual environment and activate it:
 ```bash
@@ -46,6 +66,24 @@ QA_API_KEY=your_qa_api_key_here
 
 # QA API Key for client API authentication
 QA_API_KEY_CLIENT=your_qa_api_key_client_here
+
+# Configuración del Agente Asesor
+ASESOR_API_KEY=demo-key
+ASESOR_API_KEY_CLIENT=demo-key
+ASESOR_SERVER_URL=http://localhost:8010
+ASESOR_SERVER_HOST=0.0.0.0
+ASESOR_SERVER_PORT=8010
+ASESOR_CLIENT_HOST=0.0.0.0
+ASESOR_CLIENT_PORT=8011
+
+# Configuración del Agente Auditor
+AUDITOR_API_KEY=demo-key
+AUDITOR_API_KEY_CLIENT=demo-key
+AUDITOR_SERVER_URL=http://localhost:8020
+AUDITOR_SERVER_HOST=0.0.0.0
+AUDITOR_SERVER_PORT=8020
+AUDITOR_CLIENT_HOST=0.0.0.0
+AUDITOR_CLIENT_PORT=8021
 ```
 
 **Environment Variables:**
@@ -59,47 +97,114 @@ QA_API_KEY_CLIENT=your_qa_api_key_client_here
 - `QA_API_KEY`: API key for server authentication (required)
 - `QA_API_KEY_CLIENT`: API key for client API authentication (required)
 
-## Running the Server
+## 🏃‍♂️ Ejecución de los Agentes
 
-1. Navigate to the server directory:
+### Agente QA (Original)
+
+#### Servidor QA
 ```bash
 cd server
-```
-
-2. Start the server:
-```bash
 python main.py
 ```
+Servidor en: `http://localhost:8000`
 
-The server will start using the host and port from your `.env` file (default: `http://localhost:8000`)
-
-## Running the Client
-
-### Option 1: Terminal Client (Original)
-1. In a new terminal, navigate to the client directory:
+#### Cliente QA
 ```bash
 cd client
-```
-
-2. Start the client:
-```bash
 python main.py
 ```
+Cliente API en: `http://localhost:8001`
 
-The client will connect to the server using the host and port from your `.env` file.
+### Agente Asesor
 
-### Option 2: API Client (New)
-1. In a new terminal, navigate to the client directory:
+#### Servidor Asesor
+```bash
+cd server
+python main_asesor.py
+```
+Servidor en: `http://localhost:8010`
+
+#### Cliente Asesor
 ```bash
 cd client
+python main_asesor.py
+```
+Cliente API en: `http://localhost:8011`
+
+### Agente Auditor ⭐
+
+#### Servidor Auditor
+```bash
+cd server
+python main_auditor.py
+```
+Servidor en: `http://localhost:8020`
+
+#### Cliente Auditor
+```bash
+cd client
+python main_auditor.py
+```
+Cliente API en: `http://localhost:8021`
+
+## 🧪 Pruebas
+
+### Pruebas del Agente Auditor
+```bash
+python test_auditor.py
 ```
 
-2. Start the API server:
-```bash
-python main.py
-```
+Este script prueba todas las funcionalidades del agente auditor:
+- Análisis de procesos
+- Evaluación de infraestructura
+- Análisis de documentos
+- Propuestas de automatización
+- Cálculo de ROI
+- Roadmaps de proyecto
+- Conversación completa
+- Subida de archivos
 
 The QA Agent API will start on `http://localhost:8001` (or the configured host/port).
+
+## 🎯 Capacidades del Agente Auditor
+
+El **Agente Auditor Inteligente** es una solución revolucionaria que combina las capacidades de múltiples roles tradicionales:
+
+### 🧩 Roles que Combina
+- **Business Analyst**: Análisis de procesos y propuestas de mejora
+- **Process Improvement Specialist**: Detección de ineficiencias y optimización
+- **Organizational Development Consultant**: Análisis de cultura y dinámicas organizacionales
+- **Internal Auditor**: Evaluación de controles y riesgos
+- **Digital Transformation Manager**: Liderazgo en transformación tecnológica
+- **Change Management Consultant**: Gestión del cambio organizacional
+
+### 🔍 Funcionalidades Principales
+- **Análisis de Procesos**: Detección de cuellos de botella y oportunidades de mejora
+- **Evaluación de Infraestructura**: Auditoría tecnológica y recomendaciones de modernización
+- **Análisis de Documentos**: Procesamiento inteligente de archivos y extracción de insights
+- **Propuestas de Automatización**: Identificación de procesos candidatos y tecnologías recomendadas
+- **Cálculo de ROI**: Análisis financiero completo con proyecciones a 3 años
+- **Roadmaps de Proyectos**: Planificación detallada de implementación por fases
+
+### 💡 Beneficios Clave
+- **Rapidez**: Análisis completo en minutos, no meses
+- **Escalabilidad**: Capacidad de auditar múltiples procesos simultáneamente
+- **Precisión**: Análisis basado en datos y patrones reconocidos
+- **Accionabilidad**: Propuestas concretas con roadmap de implementación
+- **ROI Medible**: Cálculos precisos de beneficios y ahorros esperados
+
+## 📞 Soporte y Documentación
+
+- **Documentación del Agente Auditor**: [README_AUDITOR.md](README_AUDITOR.md)
+- **Pruebas Automatizadas**: `python test_auditor.py`
+- **API Documentation**: Disponible en los endpoints de cada agente
+- **Ejemplos de Uso**: Incluidos en los scripts de prueba
+
+---
+
+**¿Listo para transformar tu organización?** 🚀
+
+El Agente Auditor Inteligente está diseñado para ser tu compañero estratégico en la transformación digital, proporcionando insights profundos y propuestas accionables en cuestión de minutos.
 
 ## QA Agent API Endpoints
 
