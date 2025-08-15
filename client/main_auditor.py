@@ -167,7 +167,7 @@ NO hagas múltiples preguntas en un solo mensaje. Mantén el enfoque en procesos
         """Envía información del lead al webhook externo en formato JSON"""
         try:
             # URL del webhook
-            webhook_url = os.getenv("WEBHOOK_URL", "https://www.dev.comparasoftware.com/selfhosted-n8n/webhook/98c962dd-700e-44c5-b0d5-cbb72145f8af")
+            webhook_url = os.getenv("WEBHOOK_URL", "https://www.dev.comparasoftware.com/selfhosted-n8n/webhook/b266d5b5-833d-492c-8730-4063ed75f5d0")
             
             # Preparar datos para el webhook en formato JSON
             webhook_data = {
