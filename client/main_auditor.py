@@ -419,10 +419,291 @@ Responde de forma breve y directa. Mantén el enfoque en procesos y automatizaci
 
 auditor_agent = AuditorAgent()
 
+class DiscoveryAgent:
+    def __init__(self):
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        if not self.api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment variables")
+        self.server_url = os.getenv("AUDITOR_SERVER_URL", "http://localhost:8020")
+        self.auditor_api_key = os.getenv("AUDITOR_API_KEY", "demo-key")
+        self.llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.1, api_key=self.api_key)
+        
+        self.tools = [
+            Tool(
+                name="send_to_webhook",
+                func=self.send_to_webhook,
+                description="Envía información del empleado entrevistado al webhook externo."
+            )
+        ]
+        
+        self.prompt = ChatPromptTemplate.from_messages([
+            ("system", """Eres un Agente de Discovery especializado en entrevistar empleados y colaboradores para entender sus roles, funciones y procesos diarios dentro de la compañía.
+
+Tu objetivo es:
+1. Hacer una presentación clara del propósito de la entrevista
+2. Recopilar datos básicos del empleado (nombre, puesto, papel en la compañía)
+3. Realizar discovery profundo sobre sus procesos diarios y cómo los ejecuta
+
+REGLAS FUNDAMENTALES:
+1. SIEMPRE mantén memoria de lo que ya has preguntado - NO REPITAS PREGUNTAS
+2. Haz UNA SOLA PREGUNTA a la vez
+3. Respuestas CLARAS y BREVES (máximo 2-3 líneas)
+4. Enfócate en PROCESOS DIARIOS y CÓMO se ejecutan
+5. Haz preguntas de profundización cuando sea necesario para entender detalles
+
+FLUJO DE ENTREVISTA:
+
+ETAPA 1: PRESENTACIÓN Y DATOS BÁSICOS (3 preguntas)
+1. Presentación: "Hola, soy un agente de discovery que está entrevistando a empleados para entender mejor los procesos y roles dentro de la compañía. ¿Me podrías contar tu nombre completo?"
+2. Puesto: "¿Cuál es tu puesto o cargo en la empresa?"
+3. Papel en la compañía: "¿Qué papel desempeñas dentro de la compañía? ¿Cuál es tu área de responsabilidad?"
+
+ETAPA 2: DISCOVERY DE PROCESOS DIARIOS (Preguntas abiertas con profundización)
+Objetivo: Entender qué hace el empleado en su día a día y cómo ejecuta sus procesos.
+
+PREGUNTA 4: Procesos principales
+"Cuéntame, ¿qué procesos o tareas principales realizas en tu día a día?"
+
+PREGUNTA 5: Detalles de ejecución
+"Interesante. ¿Podrías explicarme paso a paso cómo ejecutas [PROCESO ESPECÍFICO mencionado]? ¿Qué herramientas usas, cuánto tiempo toma, y qué personas están involucradas?"
+
+PREGUNTA 6: Profundización en procesos
+"Veo que [PROCESO] es importante. ¿Podrías contarme más detalles sobre cómo se coordina con otros departamentos o personas? ¿Qué información necesitas para ejecutarlo?"
+
+PREGUNTA 7: Puntos de mejora
+"Basándome en lo que me has contado, ¿hay algún aspecto de estos procesos que sientes que podría ser más eficiente o que te gustaría mejorar?"
+
+PREGUNTA 8: Herramientas y sistemas
+"¿Qué herramientas, sistemas o aplicaciones utilizas para ejecutar estos procesos? ¿Cómo te ayudan o qué limitaciones tienen?"
+
+PREGUNTA 9: Colaboración y comunicación
+"¿Cómo te comunicas y colaboras con otros equipos o personas durante la ejecución de estos procesos?"
+
+PREGUNTA 10: Cierre y agradecimiento
+"Perfecto, ya tengo una visión clara de tu rol y procesos. ¿Hay algo más que te gustaría compartir sobre tu trabajo o algún proceso específico que quieras que exploremos más a fondo?"
+
+TÉCNICAS DE PROFUNDIZACIÓN:
+- Cuando menciones un proceso, pregunta "¿Cómo exactamente?" o "¿Podrías darme un ejemplo?"
+- Si menciona tiempo, pregunta "¿Cuánto tiempo toma cada paso?"
+- Si menciona personas, pregunta "¿Cuál es el rol de cada persona en ese proceso?"
+- Si menciona herramientas, pregunta "¿Cómo te ayuda esa herramienta específicamente?"
+
+FORMATO DE RESPUESTA:
+- Respuesta breve y directa
+- Una sola pregunta por mensaje
+- Después de cada respuesta del empleado, haz una pregunta de profundización relacionada
+- Muestra interés genuino en los detalles de los procesos
+
+NO hagas múltiples preguntas en un solo mensaje. Mantén el enfoque en entender los procesos diarios y cómo se ejecutan."""),
+            ("human", "{input}"),
+            MessagesPlaceholder(variable_name="agent_scratchpad"),
+        ])
+        
+        self.agent = create_openai_functions_agent(self.llm, self.tools, self.prompt)
+        self.agent_executor = AgentExecutor(agent=self.agent, tools=self.tools, verbose=True)
+
+    def send_to_webhook(self, employee_info: dict) -> str:
+        """Envía información del empleado entrevistado al webhook externo"""
+        try:
+            webhook_url = os.getenv("WEBHOOK_URL", "https://www.dev.comparasoftware.com/selfhosted-n8n/webhook/b266d5b5-833d-492c-8730-4063ed75f5d0")
+            
+            webhook_data = {
+                "employee_info": json.dumps(employee_info, ensure_ascii=False),
+                "timestamp": datetime.now().isoformat(),
+                "source": "discovery_agent"
+            }
+            
+            response = requests.get(webhook_url, params=webhook_data, timeout=10)
+            
+            if response.status_code == 200:
+                print(f"✅ Datos del empleado enviados exitosamente al webhook: {webhook_data}")
+                return f"✅ Información del empleado enviada al webhook: {json.dumps(employee_info, ensure_ascii=False)}"
+            else:
+                print(f"❌ Error al enviar al webhook. Status: {response.status_code}, Response: {response.text}")
+                return f"❌ Error al enviar al webhook: Status {response.status_code}"
+                
+        except Exception as e:
+            print(f"❌ Error al enviar al webhook: {str(e)}")
+            return f"❌ Error al enviar al webhook: {str(e)}"
+
+    def get_conversation_stage(self, context: dict) -> str:
+        """Determina la etapa actual de la entrevista"""
+        questions_asked = len(context.get("asked_questions", []))
+        
+        if questions_asked == 0:
+            return "presentation"
+        elif questions_asked == 1:
+            return "collecting_name"
+        elif questions_asked == 2:
+            return "collecting_position"
+        elif questions_asked == 3:
+            return "collecting_role"
+        elif questions_asked == 4:
+            return "discovery_main_processes"
+        elif questions_asked == 5:
+            return "discovery_process_details"
+        elif questions_asked == 6:
+            return "discovery_coordination"
+        elif questions_asked == 7:
+            return "discovery_improvements"
+        elif questions_asked == 8:
+            return "discovery_tools_systems"
+        elif questions_asked == 9:
+            return "discovery_collaboration"
+        else:
+            return "closing_interview"
+
+    def extract_information(self, message: str, context: dict) -> dict:
+        """Extrae información específica del mensaje del empleado"""
+        message_lower = message.lower()
+        updated_context = context.copy()
+        
+        if "user_responses" not in updated_context:
+            updated_context["user_responses"] = []
+        updated_context["user_responses"].append(message)
+        
+        questions_asked = len(updated_context.get("asked_questions", []))
+        
+        if questions_asked == 1:  # Después de preguntar nombre
+            updated_context["employee_name"] = message.strip()
+        elif questions_asked == 2:  # Después de preguntar puesto
+            updated_context["position"] = message.strip()
+        elif questions_asked == 3:  # Después de preguntar papel
+            updated_context["role_responsibility"] = message.strip()
+        elif questions_asked == 4:  # Discovery: procesos principales
+            updated_context["main_processes"] = message.strip()
+        elif questions_asked == 5:  # Discovery: detalles de ejecución
+            updated_context["process_execution_details"] = message.strip()
+        elif questions_asked == 6:  # Discovery: coordinación
+            updated_context["coordination_details"] = message.strip()
+        elif questions_asked == 7:  # Discovery: mejoras
+            updated_context["improvement_areas"] = message.strip()
+        elif questions_asked == 8:  # Discovery: herramientas
+            updated_context["tools_systems"] = message.strip()
+        elif questions_asked == 9:  # Discovery: colaboración
+            updated_context["collaboration_processes"] = message.strip()
+        
+        return updated_context
+
+    def get_next_question(self, stage: str, context: dict) -> str:
+        """Genera la siguiente pregunta basada en la etapa actual"""
+        questions = {
+            "presentation": "Hola, soy un agente de discovery que está entrevistando a empleados para entender mejor los procesos y roles dentro de la compañía. ¿Me podrías contar tu nombre completo?",
+            "collecting_name": "¿Cuál es tu puesto o cargo en la empresa?",
+            "collecting_position": "¿Qué papel desempeñas dentro de la compañía? ¿Cuál es tu área de responsabilidad?",
+            "collecting_role": "Cuéntame, ¿qué procesos o tareas principales realizas en tu día a día?",
+            "discovery_main_processes": "Interesante. ¿Podrías explicarme paso a paso cómo ejecutas uno de estos procesos? ¿Qué herramientas usas, cuánto tiempo toma, y qué personas están involucradas?",
+            "discovery_process_details": "Veo que este proceso es importante. ¿Podrías contarme más detalles sobre cómo se coordina con otros departamentos o personas? ¿Qué información necesitas para ejecutarlo?",
+            "discovery_coordination": "Basándome en lo que me has contado, ¿hay algún aspecto de estos procesos que sientes que podría ser más eficiente o que te gustaría mejorar?",
+            "discovery_improvements": "¿Qué herramientas, sistemas o aplicaciones utilizas para ejecutar estos procesos? ¿Cómo te ayudan o qué limitaciones tienen?",
+            "discovery_tools_systems": "¿Cómo te comunicas y colaboras con otros equipos o personas durante la ejecución de estos procesos?",
+            "discovery_collaboration": "Perfecto, ya tengo una visión clara de tu rol y procesos. ¿Hay algo más que te gustaría compartir sobre tu trabajo o algún proceso específico que quieras que exploremos más a fondo?",
+            "closing_interview": "Excelente, ha sido muy informativo. Muchas gracias por compartir todos estos detalles sobre tu trabajo y procesos. ¿Hay algún comentario final que te gustaría hacer?"
+        }
+        return questions.get(stage, "¿Puedes proporcionarme más detalles sobre ese proceso?")
+
+    def process_message(self, message: str, convo_id: str, files: List[str] = None) -> Dict[str, Any]:
+        # Recuperar contexto previo
+        context = conversation_memory.get(convo_id, {})
+        
+        # Extraer información del mensaje
+        context = self.extract_information(message, context)
+        
+        # Determinar etapa actual
+        stage = self.get_conversation_stage(context)
+        
+        # Construir input con contexto
+        user_input = f"""
+Mensaje del empleado: {message}
+
+Contexto actual:
+- Etapa: {stage}
+- Preguntas hechas: {len(context.get('asked_questions', []))}/10
+- Información recopilada: {json.dumps(context, ensure_ascii=False, indent=2)}
+
+INSTRUCCIONES:
+- Si es la primera vez (pregunta 0), presenta el servicio y pide nombre
+- Si es pregunta 1-3, recopila datos básicos (nombre, puesto, papel en la compañía)
+- Si es pregunta 4-9, haz PREGUNTAS DE DISCOVERY sobre procesos diarios y cómo se ejecutan
+- Si es pregunta 10, cierra la entrevista
+- Haz preguntas de profundización cuando sea necesario para entender detalles
+- Enfócate en entender los procesos paso a paso y cómo se coordinan
+
+Responde de forma breve y directa. Mantén el enfoque en procesos diarios y su ejecución.
+"""
+        
+        result = self.agent_executor.invoke({"input": user_input})
+        reply = result["output"]
+        
+        # Verificar si tenemos información básica completa para enviar al webhook
+        basic_info_complete = all([
+            context.get("employee_name"),
+            context.get("position"),
+            context.get("role_responsibility")
+        ])
+        
+        # Enviar al webhook cuando se tiene información básica completa
+        if basic_info_complete and not context.get("webhook_sent"):
+            employee_data = {
+                "nombre": context.get('employee_name'),
+                "puesto": context.get('position'),
+                "papel_empresa": context.get('role_responsibility'),
+                "procesos_principales": context.get('main_processes', ''),
+                "detalles_ejecucion": context.get('process_execution_details', ''),
+                "coordinacion": context.get('coordination_details', ''),
+                "areas_mejora": context.get('improvement_areas', ''),
+                "herramientas_sistemas": context.get('tools_systems', ''),
+                "colaboracion": context.get('collaboration_processes', ''),
+                "tipo_entrevista": "discovery_empleado"
+            }
+            webhook_result = self.send_to_webhook(employee_data)
+            context["webhook_sent"] = True
+            context["webhook_result"] = webhook_result
+        
+        # Obtener siguiente pregunta
+        next_question = self.get_next_question(stage, context)
+        
+        # Actualizar contexto
+        context["last_reply"] = reply
+        context["stage"] = stage
+        context["conversation_history"] = context.get("conversation_history", []) + [message]
+        context["last_updated"] = datetime.now().isoformat()
+        
+        # Registrar pregunta hecha
+        if "asked_questions" not in context:
+            context["asked_questions"] = []
+        context["asked_questions"].append(next_question)
+        
+        conversation_memory[convo_id] = context
+        
+        return {
+            "reply": reply, 
+            "convo_id": convo_id, 
+            "context": context,
+            "next_question": next_question,
+            "stage": stage
+        }
+
+# Instanciar el agente de discovery
+discovery_agent = DiscoveryAgent()
+
 @app.post("/webhook", response_model=WebhookResponse)
 async def webhook(request: WebhookRequest, api_key: str = Depends(verify_api_key)):
     try:
         result = auditor_agent.process_message(
+            request.message, 
+            request.convo_id, 
+            request.files
+        )
+        return WebhookResponse(**result)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.post("/discovery-webhook", response_model=WebhookResponse)
+async def discovery_webhook(request: WebhookRequest, api_key: str = Depends(verify_api_key)):
+    """Endpoint para el agente de discovery que entrevista empleados"""
+    try:
+        result = discovery_agent.process_message(
             request.message, 
             request.convo_id, 
             request.files
@@ -464,6 +745,31 @@ async def get_analysis(convo_id: str, api_key: str = Depends(verify_api_key)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
+@app.get("/discovery-analysis/{convo_id}")
+async def get_discovery_analysis(convo_id: str, api_key: str = Depends(verify_api_key)):
+    """Obtiene el análisis de una entrevista de discovery específica"""
+    try:
+        context = conversation_memory.get(convo_id, {})
+        return {
+            "convo_id": convo_id,
+            "context": context,
+            "stage": context.get("stage", "unknown"),
+            "employee_info": {
+                "nombre": context.get("employee_name", "No especificado"),
+                "puesto": context.get("position", "No especificado"),
+                "papel_empresa": context.get("role_responsibility", "No especificado"),
+                "procesos_principales": context.get("main_processes", "No especificado"),
+                "detalles_ejecucion": context.get("process_execution_details", "No especificado"),
+                "coordinacion": context.get("coordination_details", "No especificado"),
+                "areas_mejora": context.get("improvement_areas", "No especificado"),
+                "herramientas_sistemas": context.get("tools_systems", "No especificado"),
+                "colaboracion": context.get("collaboration_processes", "No especificado")
+            },
+            "progress": len([k for k in context.keys() if k in ["employee_name", "position", "role_responsibility", "main_processes", "process_execution_details", "coordination_details", "improvement_areas", "tools_systems", "collaboration_processes"]])
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
 @app.get("/conversations")
 async def get_conversations(api_key: str = Depends(verify_api_key)):
     """Obtiene todas las conversaciones activas"""
@@ -478,6 +784,26 @@ async def get_conversations(api_key: str = Depends(verify_api_key)):
                 "progress": len([k for k in context.keys() if k in ["contact_name", "company_sector", "role", "main_process", "specific_problem", "improvement_goal"]])
             }
         return {"conversations": conversations}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
+@app.get("/discovery-conversations")
+async def get_discovery_conversations(api_key: str = Depends(verify_api_key)):
+    """Obtiene todas las entrevistas de discovery activas"""
+    try:
+        discovery_conversations = {}
+        for convo_id, context in conversation_memory.items():
+            # Solo incluir conversaciones que tengan información de empleado
+            if context.get("employee_name") or context.get("position"):
+                discovery_conversations[convo_id] = {
+                    "stage": context.get("stage", "unknown"),
+                    "employee_name": context.get("employee_name", "No especificado"),
+                    "position": context.get("position", "No especificado"),
+                    "papel_empresa": context.get("role_responsibility", "No especificado"),
+                    "last_updated": context.get("last_updated", "No disponible"),
+                    "progress": len([k for k in context.keys() if k in ["employee_name", "position", "role_responsibility", "main_processes", "process_execution_details", "coordination_details", "improvement_areas", "tools_systems", "collaboration_processes"]])
+                }
+        return {"discovery_conversations": discovery_conversations}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
@@ -515,22 +841,46 @@ async def root():
             "Análisis de procesos y automatizaciones",
             "Captura de información de leads",
             "Análisis de documentos",
-            "Envío automático a webhook"
+            "Envío automático a webhook",
+            "Agente de Discovery para entrevistas a empleados"
         ],
-        "stages": [
-            "initial_greeting",
-            "collecting_name",
-            "collecting_role",
-            "collecting_company",
-            "collecting_country",
-            "collecting_email",
-            "collecting_phone",
-            "discovery_business_context",
-            "discovery_current_processes", 
-            "discovery_pain_points",
-            "discovery_goals_systems",
-            "providing_recommendations"
-        ]
+        "agents": {
+            "auditor": {
+                "description": "Agente auditor de procesos empresariales",
+                "endpoint": "/webhook",
+                "stages": [
+                    "initial_greeting",
+                    "collecting_name",
+                    "collecting_role",
+                    "collecting_company",
+                    "collecting_country",
+                    "collecting_email",
+                    "collecting_phone",
+                    "discovery_business_context",
+                    "discovery_current_processes", 
+                    "discovery_pain_points",
+                    "discovery_goals_systems",
+                    "providing_recommendations"
+                ]
+            },
+            "discovery": {
+                "description": "Agente de discovery para entrevistar empleados",
+                "endpoint": "/discovery-webhook",
+                "stages": [
+                    "presentation",
+                    "collecting_name",
+                    "collecting_position",
+                    "collecting_role",
+                    "discovery_main_processes",
+                    "discovery_process_details",
+                    "discovery_coordination",
+                    "discovery_improvements",
+                    "discovery_tools_systems",
+                    "discovery_collaboration",
+                    "closing_interview"
+                ]
+            }
+        }
     }
 
 if __name__ == "__main__":
