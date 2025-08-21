@@ -11,5 +11,3 @@ FastMCP
 browser-use
 playwright
 youtube_transcript_api
-selenium>=4.21.0
-openpyxl>=3.1.2
