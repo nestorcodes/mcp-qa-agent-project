@@ -8,112 +8,47 @@ El **Agente de Discovery** es un agente inteligente especializado en entrevistar
 
 ### 🎯 Objetivos del Agente
 1. **Presentación clara** del propósito de la entrevista
-2. **Recopilación de datos básicos** del empleado (nombre, puesto, papel en la compañía)
-3. **Discovery profundo** sobre procesos diarios y cómo se ejecutan
-4. **Profundización** en detalles específicos de cada proceso
+2. **Recopilación de datos básicos** del empleado (nombre, rol, descripción del rol)
+3. **Discovery dinámico** sobre procesos diarios y cómo se ejecutan
+4. **Profundización adaptativa** en detalles específicos de cada proceso
 5. **Envío automático** de información al webhook externo
 
 ### 🔄 Flujo de Entrevista
 
-#### **ETAPA 1: PRESENTACIÓN Y DATOS BÁSICOS (3 preguntas)**
+#### **ETAPA 1: PRESENTACIÓN Y DATOS BÁSICOS (3 preguntas fijas)**
 1. **Presentación**: Saludo y explicación del propósito
 2. **Nombre**: Captura del nombre completo del empleado
-3. **Puesto**: Captura del cargo o posición en la empresa
-4. **Papel en la compañía**: Entendimiento del área de responsabilidad
+3. **Rol**: Captura del cargo o posición en la empresa
+4. **Descripción del rol**: Entendimiento de las responsabilidades y área de trabajo
 
-#### **ETAPA 2: DISCOVERY DE PROCESOS DIARIOS (7 preguntas)**
+#### **ETAPA 2: DISCOVERY DINÁMICO DE PROCESOS (Preguntas adaptativas)**
 5. **Procesos principales**: ¿Qué procesos realizas en tu día a día?
-6. **Detalles de ejecución**: ¿Cómo ejecutas paso a paso estos procesos?
-7. **Coordinación**: ¿Cómo se coordina con otros departamentos?
-8. **Puntos de mejora**: ¿Qué aspectos podrían ser más eficientes?
-9. **Herramientas y sistemas**: ¿Qué herramientas utilizas?
-10. **Colaboración**: ¿Cómo te comunicas con otros equipos?
-11. **Cierre**: ¿Hay algo más que quieras compartir?
+6. **Profundización dinámica**: Preguntas adaptativas basadas en las respuestas del empleado:
+   - Detalles de ejecución paso a paso
+   - Herramientas utilizadas y tiempo requerido
+   - Personas involucradas y coordinación
+   - Dificultades y áreas de mejora
+   - Sistemas y aplicaciones
+   - Colaboración con otros equipos
 
-### 🧠 Técnicas de Profundización
+### 🧠 Técnicas de Profundización Dinámica
 
-El agente utiliza técnicas inteligentes para profundizar en los detalles:
-- **"¿Cómo exactamente?"** para entender procesos paso a paso
-- **"¿Cuánto tiempo toma?"** para medir eficiencia
-- **"¿Cuál es el rol de cada persona?"** para entender coordinación
-- **"¿Cómo te ayuda esa herramienta?"** para entender sistemas
+El agente utiliza técnicas inteligentes para profundizar en los detalles de forma adaptativa:
+- **Escucha activa** de cada respuesta para hacer preguntas específicas
+- **Adaptación dinámica** de preguntas según la información descubierta
+- **Profundización contextual** en procesos importantes o complejos
+- **Exploración de herramientas**, tiempo, coordinación, problemas y mejoras
+- **Enfoque en ejecución paso a paso** de cada proceso
 
-## API Endpoints
+### 🔍 Ejemplos de Preguntas Dinámicas
 
-### 🔌 Discovery Webhook
-```
-POST /discovery-webhook
-```
-**Descripción**: Endpoint principal para interactuar con el agente de discovery
-
-**Body**:
-```json
-{
-  "message": "Mensaje del empleado",
-  "convo_id": "ID único de conversación",
-  "files": ["archivos en base64 (opcional)"]
-}
-```
-
-**Response**:
-```json
-{
-  "reply": "Respuesta del agente",
-  "convo_id": "ID de conversación",
-  "context": "Contexto completo de la entrevista",
-  "next_question": "Siguiente pregunta a realizar",
-  "stage": "Etapa actual de la entrevista"
-}
-```
-
-### 📊 Discovery Analysis
-```
-GET /discovery-analysis/{convo_id}
-```
-**Descripción**: Obtiene el análisis completo de una entrevista específica
-
-**Response**:
-```json
-{
-  "convo_id": "ID de conversación",
-  "context": "Contexto completo",
-  "stage": "Etapa actual",
-  "employee_info": {
-    "nombre": "Nombre del empleado",
-    "puesto": "Puesto o cargo",
-    "papel_empresa": "Papel en la compañía",
-    "procesos_principales": "Procesos que realiza",
-    "detalles_ejecucion": "Detalles de ejecución",
-    "coordinacion": "Información de coordinación",
-    "areas_mejora": "Áreas de mejora identificadas",
-    "herramientas_sistemas": "Herramientas utilizadas",
-    "colaboracion": "Procesos de colaboración"
-  },
-  "progress": "Progreso de la entrevista (0-9)"
-}
-```
-
-### 📋 Discovery Conversations
-```
-GET /discovery-conversations
-```
-**Descripción**: Lista todas las entrevistas de discovery activas
-
-**Response**:
-```json
-{
-  "discovery_conversations": {
-    "convo_id": {
-      "stage": "Etapa actual",
-      "employee_name": "Nombre del empleado",
-      "position": "Puesto",
-      "papel_empresa": "Papel en la compañía",
-      "last_updated": "Última actualización",
-      "progress": "Progreso de la entrevista"
-    }
-  }
-}
-```
+- Si menciona un proceso específico: "¿Podrías explicarme paso a paso cómo ejecutas [PROCESO]?"
+- Si menciona tiempo: "¿Cuánto tiempo toma cada paso de este proceso?"
+- Si menciona personas: "¿Quiénes están involucrados y cuál es el rol de cada uno?"
+- Si menciona herramientas: "¿Cómo te ayuda específicamente [HERRAMIENTA] en este proceso?"
+- Si menciona coordinación: "¿Cómo se coordina este proceso con otros departamentos?"
+- Si menciona problemas: "¿Qué dificultades encuentras en este proceso?"
+- Si menciona mejoras: "¿Qué te gustaría mejorar en este proceso?"
 
 ## Uso del Agente
 
@@ -197,74 +132,40 @@ python client/main_auditor.py
 
 El archivo `test_discovery_agent.py` incluye pruebas completas del agente:
 
-```bash
-python test_discovery_agent.py
-```
-
-### ✅ Casos de Prueba
-
-El script de prueba simula una entrevista completa con:
-- **Empleado**: María González
-- **Puesto**: Analista de Recursos Humanos
-- **Procesos**: Reclutamiento, onboarding, evaluación de desempeño
-- **Herramientas**: Workday, LinkedIn, Excel
-- **Colaboración**: Coordinación con gerentes y otros departamentos
-
-## Estructura del Código
-
-### 🏗️ Clase DiscoveryAgent
-
 ```python
-class DiscoveryAgent:
-    def __init__(self):
-        # Inicialización del modelo LLM y herramientas
-        
-    def send_to_webhook(self, employee_info: dict):
-        # Envío de información al webhook externo
-        
-    def get_conversation_stage(self, context: dict):
-        # Determinación de la etapa actual
-        
-    def extract_information(self, message: str, context: dict):
-        # Extracción de información del mensaje
-        
-    def get_next_question(self, stage: str, context: dict):
-        # Generación de la siguiente pregunta
-        
-    def process_message(self, message: str, convo_id: str, files: List[str]):
-        # Procesamiento principal del mensaje
+# Ejecutar pruebas
+python test_discovery_agent.py
+
+# O probar endpoint específico
+curl -X POST "http://localhost:8021/discovery-webhook" \
+  -H "x-api-key: demo-key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Hola, quiero participar en la entrevista",
+    "convo_id": "test_001",
+    "files": []
+  }'
 ```
 
-### 🔄 Flujo de Procesamiento
+### 📊 Estructura de Respuesta
 
-1. **Recepción** del mensaje del empleado
-2. **Extracción** de información relevante
-3. **Determinación** de la etapa actual
-4. **Generación** de la siguiente pregunta
-5. **Envío** al webhook cuando sea apropiado
-6. **Actualización** del contexto de la conversación
+```json
+{
+  "reply": "Respuesta del agente",
+  "convo_id": "ID de conversación",
+  "context": "Contexto de la entrevista",
+  "next_question": "Siguiente pregunta a realizar",
+  "stage": "Etapa actual de la entrevista"
+}
+```
 
-## Integración con Webhook
-
-### 📤 Envío Automático
-
-El agente envía información al webhook externo cuando:
-- Se completa la información básica (nombre, puesto, papel)
-- Se completa toda la entrevista de discovery
-
-### 📊 Datos Enviados
+### 📋 Información Capturada
 
 ```json
 {
   "nombre": "Nombre del empleado",
-  "puesto": "Puesto o cargo",
-  "papel_empresa": "Papel en la compañía",
-  "procesos_principales": "Procesos que realiza",
-  "detalles_ejecucion": "Detalles de ejecución",
-  "coordinacion": "Información de coordinación",
-  "areas_mejora": "Áreas de mejora identificadas",
-  "herramientas_sistemas": "Herramientas utilizadas",
-  "colaboracion": "Procesos de colaboración",
+  "rol": "Rol o cargo en la empresa",
+  "descripcion_rol": "Descripción del rol y responsabilidades",
   "tipo_entrevista": "discovery_empleado"
 }
 ```
@@ -273,8 +174,8 @@ El agente envía información al webhook externo cuando:
 
 ### 🎯 **Enfoque Especializado**
 - Diseñado específicamente para entrevistas a empleados
-- Preguntas estructuradas y progresivas
-- Técnicas de profundización inteligentes
+- Preguntas estructuradas en la fase inicial
+- Discovery dinámico y adaptativo en la fase de profundización
 
 ### 🧠 **Inteligencia Artificial**
 - Modelo GPT-4 para respuestas contextuales
@@ -282,7 +183,8 @@ El agente envía información al webhook externo cuando:
 - Adaptación dinámica a las respuestas del empleado
 
 ### 📊 **Gestión de Datos**
-- Captura estructurada de información
+- Captura estructurada de información básica
+- Discovery dinámico sin estructura rígida
 - Envío automático a sistemas externos
 - Seguimiento del progreso de la entrevista
 
@@ -290,6 +192,7 @@ El agente envía información al webhook externo cuando:
 - Manejo de archivos adjuntos
 - Personalización de preguntas según contexto
 - Extensibilidad para nuevos tipos de entrevistas
+- Adaptación dinámica a las respuestas del empleado
 
 ## Casos de Uso
 
@@ -322,31 +225,26 @@ Para contribuir al desarrollo del agente:
 
 ### 🧪 Pruebas
 
-- Ejecutar `test_discovery_agent.py` antes de cambios
-- Verificar que todas las etapas funcionen correctamente
-- Comprobar el envío al webhook
-- Validar la extracción de información
+Para ejecutar las pruebas:
 
-## Soporte
+```bash
+# Pruebas unitarias
+python -m pytest test_discovery_agent.py
 
-### 📞 Contacto
+# Pruebas de integración
+python test_webhook_auditor.py
+```
 
-Para soporte técnico o preguntas sobre el agente:
-- Revisar la documentación de la API
-- Ejecutar las pruebas para verificar funcionamiento
-- Verificar la configuración de variables de entorno
+## Changelog
 
-### 🐛 Reportar Problemas
+### v2.0.0 - Discovery Dinámico
+- **Nuevo**: Flujo simplificado con solo 3 preguntas básicas
+- **Nuevo**: Discovery dinámico y adaptativo
+- **Mejorado**: Preguntas contextuales basadas en respuestas
+- **Optimizado**: Mejor manejo de memoria y contexto
 
-Al reportar problemas, incluir:
-- Descripción detallada del problema
-- Pasos para reproducir
-- Logs de error
-- Configuración del entorno
-- Versión del código
-
----
-
-**Versión**: 1.0.0  
-**Última actualización**: Diciembre 2024  
-**Desarrollado por**: ComparaSoftware QA Team
+### v1.0.0 - Versión Inicial
+- Implementación básica del agente de discovery
+- Flujo estructurado de preguntas
+- Envío automático a webhook
+- Gestión de memoria de conversaciones

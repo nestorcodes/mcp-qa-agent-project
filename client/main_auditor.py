@@ -441,60 +441,53 @@ class DiscoveryAgent:
 
 Tu objetivo es:
 1. Hacer una presentación clara del propósito de la entrevista
-2. Recopilar datos básicos del empleado (nombre, puesto, papel en la compañía)
-3. Realizar discovery profundo sobre sus procesos diarios y cómo los ejecuta
+2. Recopilar datos básicos del empleado (nombre, rol, descripción del rol)
+3. Realizar discovery dinámico sobre sus procesos diarios y cómo los ejecuta
 
 REGLAS FUNDAMENTALES:
 1. SIEMPRE mantén memoria de lo que ya has preguntado - NO REPITAS PREGUNTAS
 2. Haz UNA SOLA PREGUNTA a la vez
 3. Respuestas CLARAS y BREVES (máximo 2-3 líneas)
 4. Enfócate en PROCESOS DIARIOS y CÓMO se ejecutan
-5. Haz preguntas de profundización cuando sea necesario para entender detalles
+5. Haz preguntas de profundización dinámicas basadas en las respuestas del empleado
+6. Adapta tus preguntas según la información que vayas descubriendo
 
 FLUJO DE ENTREVISTA:
 
-ETAPA 1: PRESENTACIÓN Y DATOS BÁSICOS (3 preguntas)
+ETAPA 1: PRESENTACIÓN Y DATOS BÁSICOS (3 preguntas fijas)
 1. Presentación: "Hola, soy un agente de discovery que está entrevistando a empleados para entender mejor los procesos y roles dentro de la compañía. ¿Me podrías contar tu nombre completo?"
-2. Puesto: "¿Cuál es tu puesto o cargo en la empresa?"
-3. Papel en la compañía: "¿Qué papel desempeñas dentro de la compañía? ¿Cuál es tu área de responsabilidad?"
+2. Rol: "¿Cuál es tu rol o cargo en la empresa?"
+3. Descripción del rol: "¿Podrías darme una pequeña descripción de tu rol y qué responsabilidades tienes?"
 
-ETAPA 2: DISCOVERY DE PROCESOS DIARIOS (Preguntas abiertas con profundización)
+ETAPA 2: DISCOVERY DINÁMICO DE PROCESOS (Preguntas adaptativas)
 Objetivo: Entender qué hace el empleado en su día a día y cómo ejecuta sus procesos.
 
-PREGUNTA 4: Procesos principales
-"Cuéntame, ¿qué procesos o tareas principales realizas en tu día a día?"
+Después de las 3 preguntas básicas, comienza a hacer preguntas de discovery:
+- Pregunta sobre procesos principales: "Cuéntame, ¿qué procesos o tareas principales realizas en tu día a día?"
+- Basándote en su respuesta, haz preguntas de profundización específicas:
+  * Si menciona un proceso específico: "¿Podrías explicarme paso a paso cómo ejecutas [PROCESO]? ¿Qué herramientas usas y cuánto tiempo toma?"
+  * Si menciona tiempo: "¿Cuánto tiempo toma cada paso de este proceso?"
+  * Si menciona personas: "¿Quiénes están involucrados en este proceso y cuál es el rol de cada uno?"
+  * Si menciona herramientas: "¿Cómo te ayuda específicamente [HERRAMIENTA] en este proceso?"
+  * Si menciona coordinación: "¿Cómo se coordina este proceso con otros departamentos?"
+  * Si menciona problemas: "¿Qué dificultades encuentras en este proceso?"
+  * Si menciona mejoras: "¿Qué te gustaría mejorar en este proceso?"
 
-PREGUNTA 5: Detalles de ejecución
-"Interesante. ¿Podrías explicarme paso a paso cómo ejecutas [PROCESO ESPECÍFICO mencionado]? ¿Qué herramientas usas, cuánto tiempo toma, y qué personas están involucradas?"
-
-PREGUNTA 6: Profundización en procesos
-"Veo que [PROCESO] es importante. ¿Podrías contarme más detalles sobre cómo se coordina con otros departamentos o personas? ¿Qué información necesitas para ejecutarlo?"
-
-PREGUNTA 7: Puntos de mejora
-"Basándome en lo que me has contado, ¿hay algún aspecto de estos procesos que sientes que podría ser más eficiente o que te gustaría mejorar?"
-
-PREGUNTA 8: Herramientas y sistemas
-"¿Qué herramientas, sistemas o aplicaciones utilizas para ejecutar estos procesos? ¿Cómo te ayudan o qué limitaciones tienen?"
-
-PREGUNTA 9: Colaboración y comunicación
-"¿Cómo te comunicas y colaboras con otros equipos o personas durante la ejecución de estos procesos?"
-
-PREGUNTA 10: Cierre y agradecimiento
-"Perfecto, ya tengo una visión clara de tu rol y procesos. ¿Hay algo más que te gustaría compartir sobre tu trabajo o algún proceso específico que quieras que exploremos más a fondo?"
-
-TÉCNICAS DE PROFUNDIZACIÓN:
-- Cuando menciones un proceso, pregunta "¿Cómo exactamente?" o "¿Podrías darme un ejemplo?"
-- Si menciona tiempo, pregunta "¿Cuánto tiempo toma cada paso?"
-- Si menciona personas, pregunta "¿Cuál es el rol de cada persona en ese proceso?"
-- Si menciona herramientas, pregunta "¿Cómo te ayuda esa herramienta específicamente?"
+TÉCNICAS DE PROFUNDIZACIÓN DINÁMICA:
+- Escucha atentamente cada respuesta y haz preguntas específicas sobre lo que mencionen
+- No sigas un script fijo, adapta tus preguntas según la información que vayas descubriendo
+- Profundiza en los procesos que parezcan más importantes o complejos
+- Pregunta sobre herramientas, tiempo, coordinación, problemas y mejoras
+- Mantén el enfoque en entender los procesos paso a paso
 
 FORMATO DE RESPUESTA:
 - Respuesta breve y directa
 - Una sola pregunta por mensaje
 - Después de cada respuesta del empleado, haz una pregunta de profundización relacionada
 - Muestra interés genuino en los detalles de los procesos
+- Adapta tus preguntas según lo que hayas descubierto
 
-NO hagas múltiples preguntas en un solo mensaje. Mantén el enfoque en entender los procesos diarios y cómo se ejecutan."""),
+NO hagas múltiples preguntas en un solo mensaje. Mantén el enfoque en entender los procesos diarios y cómo se ejecutan de forma dinámica y adaptativa."""),
             ("human", "{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ])
@@ -535,23 +528,11 @@ NO hagas múltiples preguntas en un solo mensaje. Mantén el enfoque en entender
         elif questions_asked == 1:
             return "collecting_name"
         elif questions_asked == 2:
-            return "collecting_position"
-        elif questions_asked == 3:
             return "collecting_role"
-        elif questions_asked == 4:
-            return "discovery_main_processes"
-        elif questions_asked == 5:
-            return "discovery_process_details"
-        elif questions_asked == 6:
-            return "discovery_coordination"
-        elif questions_asked == 7:
-            return "discovery_improvements"
-        elif questions_asked == 8:
-            return "discovery_tools_systems"
-        elif questions_asked == 9:
-            return "discovery_collaboration"
+        elif questions_asked == 3:
+            return "collecting_role_description"
         else:
-            return "closing_interview"
+            return "discovery_dynamic"
 
     def extract_information(self, message: str, context: dict) -> dict:
         """Extrae información específica del mensaje del empleado"""
@@ -566,22 +547,12 @@ NO hagas múltiples preguntas en un solo mensaje. Mantén el enfoque en entender
         
         if questions_asked == 1:  # Después de preguntar nombre
             updated_context["employee_name"] = message.strip()
-        elif questions_asked == 2:  # Después de preguntar puesto
-            updated_context["position"] = message.strip()
-        elif questions_asked == 3:  # Después de preguntar papel
-            updated_context["role_responsibility"] = message.strip()
-        elif questions_asked == 4:  # Discovery: procesos principales
-            updated_context["main_processes"] = message.strip()
-        elif questions_asked == 5:  # Discovery: detalles de ejecución
-            updated_context["process_execution_details"] = message.strip()
-        elif questions_asked == 6:  # Discovery: coordinación
-            updated_context["coordination_details"] = message.strip()
-        elif questions_asked == 7:  # Discovery: mejoras
-            updated_context["improvement_areas"] = message.strip()
-        elif questions_asked == 8:  # Discovery: herramientas
-            updated_context["tools_systems"] = message.strip()
-        elif questions_asked == 9:  # Discovery: colaboración
-            updated_context["collaboration_processes"] = message.strip()
+        elif questions_asked == 2:  # Después de preguntar rol
+            updated_context["role"] = message.strip()
+        elif questions_asked == 3:  # Después de preguntar descripción del rol
+            updated_context["role_description"] = message.strip()
+        # Para las preguntas de discovery dinámico, no extraemos información específica
+        # ya que el agente debe adaptarse dinámicamente
         
         return updated_context
 
@@ -589,16 +560,10 @@ NO hagas múltiples preguntas en un solo mensaje. Mantén el enfoque en entender
         """Genera la siguiente pregunta basada en la etapa actual"""
         questions = {
             "presentation": "Hola, soy un agente de discovery que está entrevistando a empleados para entender mejor los procesos y roles dentro de la compañía. ¿Me podrías contar tu nombre completo?",
-            "collecting_name": "¿Cuál es tu puesto o cargo en la empresa?",
-            "collecting_position": "¿Qué papel desempeñas dentro de la compañía? ¿Cuál es tu área de responsabilidad?",
-            "collecting_role": "Cuéntame, ¿qué procesos o tareas principales realizas en tu día a día?",
-            "discovery_main_processes": "Interesante. ¿Podrías explicarme paso a paso cómo ejecutas uno de estos procesos? ¿Qué herramientas usas, cuánto tiempo toma, y qué personas están involucradas?",
-            "discovery_process_details": "Veo que este proceso es importante. ¿Podrías contarme más detalles sobre cómo se coordina con otros departamentos o personas? ¿Qué información necesitas para ejecutarlo?",
-            "discovery_coordination": "Basándome en lo que me has contado, ¿hay algún aspecto de estos procesos que sientes que podría ser más eficiente o que te gustaría mejorar?",
-            "discovery_improvements": "¿Qué herramientas, sistemas o aplicaciones utilizas para ejecutar estos procesos? ¿Cómo te ayudan o qué limitaciones tienen?",
-            "discovery_tools_systems": "¿Cómo te comunicas y colaboras con otros equipos o personas durante la ejecución de estos procesos?",
-            "discovery_collaboration": "Perfecto, ya tengo una visión clara de tu rol y procesos. ¿Hay algo más que te gustaría compartir sobre tu trabajo o algún proceso específico que quieras que exploremos más a fondo?",
-            "closing_interview": "Excelente, ha sido muy informativo. Muchas gracias por compartir todos estos detalles sobre tu trabajo y procesos. ¿Hay algún comentario final que te gustaría hacer?"
+            "collecting_name": "¿Cuál es tu rol o cargo en la empresa?",
+            "collecting_role": "¿Podrías darme una pequeña descripción de tu rol y qué responsabilidades tienes?",
+            "collecting_role_description": "Cuéntame, ¿qué procesos o tareas principales realizas en tu día a día?",
+            "discovery_dynamic": "Basándome en lo que me has contado, ¿podrías explicarme más detalles sobre uno de estos procesos? ¿Cómo lo ejecutas paso a paso?"
         }
         return questions.get(stage, "¿Puedes proporcionarme más detalles sobre ese proceso?")
 
@@ -618,18 +583,18 @@ Mensaje del empleado: {message}
 
 Contexto actual:
 - Etapa: {stage}
-- Preguntas hechas: {len(context.get('asked_questions', []))}/10
+- Preguntas hechas: {len(context.get('asked_questions', []))}
 - Información recopilada: {json.dumps(context, ensure_ascii=False, indent=2)}
 
 INSTRUCCIONES:
 - Si es la primera vez (pregunta 0), presenta el servicio y pide nombre
-- Si es pregunta 1-3, recopila datos básicos (nombre, puesto, papel en la compañía)
-- Si es pregunta 4-9, haz PREGUNTAS DE DISCOVERY sobre procesos diarios y cómo se ejecutan
-- Si es pregunta 10, cierra la entrevista
-- Haz preguntas de profundización cuando sea necesario para entender detalles
-- Enfócate en entender los procesos paso a paso y cómo se coordinan
+- Si es pregunta 1-3, recopila datos básicos (nombre, rol, descripción del rol)
+- Si es pregunta 4 o más, haz PREGUNTAS DE DISCOVERY DINÁMICAS sobre procesos diarios
+- Adapta tus preguntas según las respuestas del empleado
+- Profundiza en los procesos que mencionen, preguntando sobre herramientas, tiempo, coordinación, etc.
+- Haz preguntas de profundización específicas basadas en lo que vayas descubriendo
 
-Responde de forma breve y directa. Mantén el enfoque en procesos diarios y su ejecución.
+Responde de forma breve y directa. Mantén el enfoque en procesos diarios y su ejecución de forma dinámica.
 """
         
         result = self.agent_executor.invoke({"input": user_input})
@@ -638,22 +603,16 @@ Responde de forma breve y directa. Mantén el enfoque en procesos diarios y su e
         # Verificar si tenemos información básica completa para enviar al webhook
         basic_info_complete = all([
             context.get("employee_name"),
-            context.get("position"),
-            context.get("role_responsibility")
+            context.get("role"),
+            context.get("role_description")
         ])
         
         # Enviar al webhook cuando se tiene información básica completa
         if basic_info_complete and not context.get("webhook_sent"):
             employee_data = {
                 "nombre": context.get('employee_name'),
-                "puesto": context.get('position'),
-                "papel_empresa": context.get('role_responsibility'),
-                "procesos_principales": context.get('main_processes', ''),
-                "detalles_ejecucion": context.get('process_execution_details', ''),
-                "coordinacion": context.get('coordination_details', ''),
-                "areas_mejora": context.get('improvement_areas', ''),
-                "herramientas_sistemas": context.get('tools_systems', ''),
-                "colaboracion": context.get('collaboration_processes', ''),
+                "rol": context.get('role'),
+                "descripcion_rol": context.get('role_description'),
                 "tipo_entrevista": "discovery_empleado"
             }
             webhook_result = self.send_to_webhook(employee_data)
@@ -869,15 +828,9 @@ async def root():
                 "stages": [
                     "presentation",
                     "collecting_name",
-                    "collecting_position",
                     "collecting_role",
-                    "discovery_main_processes",
-                    "discovery_process_details",
-                    "discovery_coordination",
-                    "discovery_improvements",
-                    "discovery_tools_systems",
-                    "discovery_collaboration",
-                    "closing_interview"
+                    "collecting_role_description",
+                    "discovery_dynamic"
                 ]
             }
         }

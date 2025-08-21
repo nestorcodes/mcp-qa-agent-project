@@ -1,0 +1,46 @@
+=== LOG DE REGISTROS CON ERRORES - INICIADO: 2025-08-18 12:19:25 ===
+❌ REGISTRO 20 FALLÓ: davidegamez@gmail.com - ERROR: Alert Text: All fields are required.
+Message: unexpected alert open: {Alert text : All fields are required.}
+  (Session info: chrome=139.0.7258.127)
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7d1e96b25+79621]
+	GetHandleVerifier [0x0x7ff7d1e96b80+79712]
+	(No symbol) [0x0x7ff7d1c2c0ea]
+	(No symbol) [0x0x7ff7d1cd3f3d]
+	(No symbol) [0x0x7ff7d1caaf13]
+	(No symbol) [0x0x7ff7d1c74151]
+	(No symbol) [0x0x7ff7d1c74ee3]
+	GetHandleVerifier [0x0x7ff7d215683d+2962461]
+	GetHandleVerifier [0x0x7ff7d2150b5d+2938685]
+	GetHandleVerifier [0x0x7ff7d216f71d+3064573]
+	GetHandleVerifier [0x0x7ff7d1eb0c6e+186446]
+	GetHandleVerifier [0x0x7ff7d1eb8a3f+218655]
+	GetHandleVerifier [0x0x7ff7d1e9f914+115956]
+	GetHandleVerifier [0x0x7ff7d1e9fac9+116393]
+	GetHandleVerifier [0x0x7ff7d1e85ef8+10968]
+	BaseThreadInitThunk [0x0x7ff8cbcd7374+20]
+	RtlUserThreadStart [0x0x7ff8cc0bcc91+33]
+ - 2025-08-18 12:26:02
+❌ REGISTRO 97 FALLÓ: alexsrmez@hotmail.com - ERROR: HTTPConnectionPool(host='localhost', port=64185): Read timed out. (read timeout=120) - 2025-08-18 12:54:37
+❌ REGISTRO 301 FALLÓ: mariauxiliadora67@hotmail.com - ERROR: Alert Text: All fields are required.
+Message: unexpected alert open: {Alert text : All fields are required.}
+  (Session info: chrome=139.0.7258.127)
+Stacktrace:
+	GetHandleVerifier [0x0x7ff7d1e96b25+79621]
+	GetHandleVerifier [0x0x7ff7d1e96b80+79712]
+	(No symbol) [0x0x7ff7d1c2c0ea]
+	(No symbol) [0x0x7ff7d1cd3f3d]
+	(No symbol) [0x0x7ff7d1caaf13]
+	(No symbol) [0x0x7ff7d1c74151]
+	(No symbol) [0x0x7ff7d1c74ee3]
+	GetHandleVerifier [0x0x7ff7d215683d+2962461]
+	GetHandleVerifier [0x0x7ff7d2150b5d+2938685]
+	GetHandleVerifier [0x0x7ff7d216f71d+3064573]
+	GetHandleVerifier [0x0x7ff7d1eb0c6e+186446]
+	GetHandleVerifier [0x0x7ff7d1eb8a3f+218655]
+	GetHandleVerifier [0x0x7ff7d1e9f914+115956]
+	GetHandleVerifier [0x0x7ff7d1e9fac9+116393]
+	GetHandleVerifier [0x0x7ff7d1e85ef8+10968]
+	BaseThreadInitThunk [0x0x7ff8cbcd7374+20]
+	RtlUserThreadStart [0x0x7ff8cc0bcc91+33]
+ - 2025-08-18 14:06:32
