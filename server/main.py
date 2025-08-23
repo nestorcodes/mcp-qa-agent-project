@@ -9,6 +9,10 @@ from urllib.parse import urlparse, parse_qs
 import uvicorn
 import os
 import asyncio
+import json
+import re
+from typing import List, Dict, Any
+import requests
 
 load_dotenv()
 
@@ -51,6 +55,14 @@ class YouTubeTranscriptResponse(BaseModel):
     url: str
     language: str
 
+class ProcessTranscriptRequest(BaseModel):
+    url: str
+    prompt: str
+
+class ProcessTranscriptResponse(BaseModel):
+    sql_inserts: str
+    processed_data: dict
+
 async def get_crawler():
     """Get or create the global crawler instance"""
     global crawler
@@ -59,6 +71,62 @@ async def get_crawler():
             crawler = AsyncWebCrawler()
             await crawler.start()
         return crawler
+
+def get_youtube_video_title(video_id: str) -> str:
+    """
+    Obtiene el título real del video de YouTube
+    """
+    try:
+        # Intentar obtener el título usando la API pública de YouTube
+        url = f"https://www.youtube.com/watch?v={video_id}"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        
+        response = requests.get(url, headers=headers, timeout=15)
+        if response.status_code == 200:
+            # Buscar el título en el HTML de la página
+            html_content = response.text
+            
+            # Buscar el título en diferentes patrones comunes
+            title_patterns = [
+                r'<title>(.*?)</title>',
+                r'"title":"([^"]+)"',
+                r'<meta property="og:title" content="([^"]+)"',
+                r'<meta name="title" content="([^"]+)"',
+                r'"videoTitle":"([^"]+)"',
+                r'"title":"([^"]+)"'
+            ]
+            
+            for pattern in title_patterns:
+                match = re.search(pattern, html_content)
+                if match:
+                    title = match.group(1)
+                    # Limpiar el título
+                    title = title.replace(' - YouTube', '').replace(' | YouTube', '')
+                    title = title.replace('&amp;', '&').replace('&quot;', '"').replace('&#39;', "'")
+                    title = title.strip()
+                    if title and len(title) > 5:  # Verificar que el título sea válido
+                        # Limitar la longitud del título para la base de datos
+                        if len(title) > 200:
+                            title = title[:197] + "..."
+                        return title
+            
+            # Si no se encuentra con los patrones, usar un título por defecto
+            return f"Video {video_id}"
+        else:
+            print(f"Error HTTP {response.status_code} al obtener título del video")
+            return f"Video {video_id}"
+            
+    except requests.exceptions.Timeout:
+        print(f"Timeout al obtener título del video {video_id}")
+        return f"Video {video_id}"
+    except requests.exceptions.RequestException as e:
+        print(f"Error de conexión al obtener título del video: {str(e)}")
+        return f"Video {video_id}"
+    except Exception as e:
+        print(f"Error inesperado obteniendo título del video: {str(e)}")
+        return f"Video {video_id}"
 
 @app.post("/crawl", response_model=CrawlResponse)
 async def crawl_website(request: CrawlRequest, _: None = Depends(verify_api_key)):
@@ -142,8 +210,8 @@ async def youtube_transcript(request: YouTubeTranscriptRequest, _: None = Depend
         for i in range(len(data) - 1):
             data[i]['end'] = data[i + 1]['start']
         
-        # Last element: end = start + duration
-        data[-1]['end'] = data[-1]['start'] + data[-1]['duration']
+        # Last element: end = start + duration + 1 second extra for better playback
+        data[-1]['end'] = data[-1]['start'] + data[-1]['duration'] + 1
         
         return YouTubeTranscriptResponse(
             transcript=data,
@@ -156,6 +224,190 @@ async def youtube_transcript(request: YouTubeTranscriptRequest, _: None = Depend
         print(f"[debug-server] Error extracting YouTube transcript: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error extracting YouTube transcript: {str(e)}")
 
+async def process_transcript_and_generate_sql(url: str, prompt: str) -> ProcessTranscriptResponse:
+    """
+    Procesa una transcripción de YouTube y genera INSERT SQL para la base de datos
+    """
+    try:
+        # 1. Obtener la transcripción
+        parsed_url = urlparse(url)
+        query_params = parse_qs(parsed_url.query)
+        video_id = query_params.get("v", [None])[0]
+        
+        if not video_id:
+            raise ValueError("Invalid YouTube URL. Could not extract video ID.")
+        
+        # Obtener transcripción
+        ytt_api = YouTubeTranscriptApi()
+        fetched_transcript = ytt_api.fetch(video_id)
+        raw_data = fetched_transcript.to_raw_data()
+        
+        # 2. Procesar la transcripción según el prompt
+        processed_data = await process_transcript_with_ai(raw_data, prompt, video_id, url)
+        
+        # 3. Generar INSERT SQL
+        sql_inserts = generate_sql_inserts(processed_data, video_id, url)
+        
+        return ProcessTranscriptResponse(
+            sql_inserts=sql_inserts,
+            processed_data=processed_data
+        )
+        
+    except Exception as e:
+        print(f"Error processing transcript: {str(e)}")
+        raise e
+
+async def process_transcript_with_ai(transcript_data: List[Dict], prompt: str, video_id: str, url: str) -> Dict:
+    """
+    Procesa la transcripción usando IA para agrupar clips, traducir y extraer vocabulario
+    """
+    # Crear el prompt completo para la IA
+    system_prompt = f"""
+    Actúa como un procesador de transcripciones de video para una aplicación de aprendizaje de idiomas. 
+    
+    {prompt}
+    
+    Procesa la siguiente transcripción y devuelve solo el JSON transformado sin texto adicional.
+    """
+    
+    # Preparar los datos para la IA
+    input_data = {
+        "transcript": transcript_data,
+        "video_id": video_id,
+        "url": url,
+        "language": "en"
+    }
+    
+    # Usar OpenAI para procesar
+    llm = ChatOpenAI(model="gpt-4o")
+    
+    # Crear el mensaje completo
+    full_prompt = f"{system_prompt}\n\nJSON a procesar:\n{json.dumps(input_data, indent=2)}"
+    
+    response = await llm.ainvoke(full_prompt)
+    
+    try:
+        # Extraer el JSON de la respuesta
+        response_text = response.content
+        # Buscar el JSON en la respuesta
+        json_match = re.search(r'\{.*\}', response_text, re.DOTALL)
+        if json_match:
+            processed_data = json.loads(json_match.group())
+            return processed_data
+        else:
+            raise ValueError("No se pudo extraer JSON válido de la respuesta de la IA")
+    except json.JSONDecodeError as e:
+        print(f"Error parsing AI response: {e}")
+        print(f"AI Response: {response_text}")
+        raise ValueError(f"Error parsing AI response: {e}")
+
+def generate_sql_inserts(processed_data: Dict, video_id: str, url: str) -> str:
+    """
+    Genera todos los INSERT SQL necesarios para la base de datos
+    """
+    sql_statements = []
+    
+    # Calcular la duración total de la lección desde el último clip
+    total_duration = "0"  # Por defecto en segundos
+    if 'transcript' in processed_data and isinstance(processed_data['transcript'], list) and len(processed_data['transcript']) > 0:
+        last_clip = processed_data['transcript'][-1]
+        total_duration_seconds = last_clip.get('end', 0)
+        # Mantener la duración en segundos para la base de datos
+        total_duration = str(int(total_duration_seconds))
+    
+    # Agregar inicio de transacción
+    sql_statements.append("BEGIN;")
+    
+    # 1. INSERT para la tabla lessons
+    title = get_youtube_video_title(video_id)  # Obtener título real del video
+    language = "en"
+    target_language = "English"
+    thumbnail_url = f"https://i.ytimg.com/vi/{video_id}/hqdefault.jpg"
+    
+    lesson_insert = f"""
+-- Insertar lección con duración calculada desde el último clip
+-- Título: {title}
+-- Duración total: {total_duration} segundos (calculada desde end del último clip)
+INSERT INTO public.lessons (id, title, language, target_language, youtube_url, youtube_video_id, duration, thumbnail_url, status, created_at, updated_at)
+VALUES (gen_random_uuid(), '{title}', '{language}', '{target_language}', '{url}', '{video_id}', '{total_duration}', '{thumbnail_url}', 'ready', now(), now());"""
+    
+    sql_statements.append(lesson_insert)
+    
+    # 2. INSERT para la tabla clips
+    if 'transcript' in processed_data and isinstance(processed_data['transcript'], list):
+        for i, clip in enumerate(processed_data['transcript']):
+            start_time = clip.get('start', 0)
+            end_time = clip.get('end', 0)
+            original_text = clip.get('text', '').replace("'", "''")  # Escapar comillas simples
+            translated_text = clip.get('text_translate', '').replace("'", "''")
+            order_index = i + 1
+            
+            clip_insert = f"""
+-- Insertar clip {i+1}
+-- Nota: La duración incluye 1 segundo extra para mejor reproducción
+INSERT INTO public.clips (id, lesson_id, start_time, end_time, original_text, translated_text, order_index, created_at)
+SELECT 
+    gen_random_uuid(),
+    l.id,
+    {start_time},
+    {end_time},
+    '{original_text}',
+    '{translated_text}',
+    {order_index},
+    now()
+FROM public.lessons l 
+WHERE l.youtube_video_id = '{video_id}'
+ORDER BY l.created_at DESC 
+LIMIT 1;"""
+            
+            sql_statements.append(clip_insert)
+            
+            # 3. INSERT para la tabla vocabulary
+            if 'vocabulary' in clip and isinstance(clip['vocabulary'], list):
+                for j, vocab in enumerate(clip['vocabulary']):
+                    original_word = vocab.get('original_word', '').replace("'", "''")
+                    translation = vocab.get('translation', '').replace("'", "''")
+                    notes = vocab.get('notes', '').replace("'", "''") if vocab.get('notes') else None
+                    
+                    vocab_insert = f"""
+-- Insertar vocabulario {j+1} del clip {i+1}
+INSERT INTO public.vocabulary (id, clip_id, original_word, translation, notes, created_at)
+SELECT 
+    gen_random_uuid(),
+    c.id,
+    '{original_word}',
+    '{translation}',
+    {f"'{notes}'" if notes else 'NULL'},
+    now()
+FROM public.clips c
+JOIN public.lessons l ON c.lesson_id = l.id
+WHERE l.youtube_video_id = '{video_id}' 
+AND c.order_index = {order_index}
+LIMIT 1;"""
+                    
+                    sql_statements.append(vocab_insert)
+    
+    # Agregar commit
+    sql_statements.append("COMMIT;")
+    
+    return "\n".join(sql_statements)
+
+@app.post("/process-transcript", response_model=ProcessTranscriptResponse)
+async def process_transcript_endpoint(request: ProcessTranscriptRequest, _: None = Depends(verify_api_key)):
+    """
+    Procesa una transcripción de YouTube y genera INSERT SQL para la base de datos
+    """
+    try:
+        print(f"[debug-server] process_transcript({request.url}, {request.prompt})")
+        
+        result = await process_transcript_and_generate_sql(request.url, request.prompt)
+        
+        return result
+        
+    except Exception as e:
+        print(f"[debug-server] Error processing transcript: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing transcript: {str(e)}")
+
 @app.get("/")
 async def root():
     """
@@ -167,7 +419,8 @@ async def root():
         "endpoints": {
             "crawl": "/crawl - POST - Crawl a website",
             "browser_agent": "/browser-agent - POST - Run browser agent",
-            "youtube_transcript": "/youtube-transcript - POST - Extract YouTube video transcript"
+            "youtube_transcript": "/youtube-transcript - POST - Extract YouTube video transcript",
+            "process_transcript": "/process-transcript - POST - Process transcript and generate SQL inserts"
         }
     }
 
