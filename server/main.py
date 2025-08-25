@@ -172,26 +172,77 @@ async def browser_agent(request: BrowserAgentRequest, _: None = Depends(verify_a
         model_actions = None
         screenshots = None
         
+        print(f"[debug-server] Result type: {type(result)}")
+        print(f"[debug-server] Result attributes: {dir(result)}")
+        
         try:
             # Try to get model_actions from the result
             if hasattr(result, 'model_actions') and callable(result.model_actions):
-                model_actions = result.model_actions()
+                print(f"[debug-server] Found model_actions method on result")
+                model_actions_raw = result.model_actions()
+                print(f"[debug-server] model_actions_raw type: {type(model_actions_raw)}, value: {model_actions_raw}")
+                # Convert to string if it's a list or other type
+                if isinstance(model_actions_raw, list):
+                    model_actions = json.dumps(model_actions_raw, ensure_ascii=False)
+                    print(f"[debug-server] Converted list to JSON string, length: {len(model_actions)}")
+                else:
+                    model_actions = str(model_actions_raw) if model_actions_raw else None
+                    print(f"[debug-server] Converted to string: {model_actions}")
             elif hasattr(result, 'result') and hasattr(result.result, 'model_actions') and callable(result.result.model_actions):
-                model_actions = result.result.model_actions()
+                print(f"[debug-server] Found model_actions method on result.result")
+                model_actions_raw = result.result.model_actions()
+                print(f"[debug-server] model_actions_raw type: {type(model_actions_raw)}, value: {model_actions_raw}")
+                # Convert to string if it's a list or other type
+                if isinstance(model_actions_raw, list):
+                    model_actions = json.dumps(model_actions_raw, ensure_ascii=False)
+                    print(f"[debug-server] Converted list to JSON string, length: {len(model_actions)}")
+                else:
+                    model_actions = str(model_actions_raw) if model_actions_raw else None
+                    print(f"[debug-server] Converted to string: {model_actions}")
+            else:
+                print(f"[debug-server] No model_actions method found")
         except Exception as e:
             print(f"Warning: Could not extract model_actions: {str(e)}")
+            import traceback
+            traceback.print_exc()
         
         try:
             # Try to get screenshots from the result
             if hasattr(result, 'screenshots') and callable(result.screenshots):
-                screenshots = result.screenshots()
+                print(f"[debug-server] Found screenshots method on result")
+                screenshots_raw = result.screenshots()
+                print(f"[debug-server] screenshots_raw type: {type(screenshots_raw)}, length: {len(screenshots_raw) if hasattr(screenshots_raw, '__len__') else 'N/A'}")
+                # Convert to string if it's a list or other type
+                if isinstance(screenshots_raw, list):
+                    screenshots = json.dumps(screenshots_raw, ensure_ascii=False)
+                    print(f"[debug-server] Converted list to JSON string, length: {len(screenshots)}")
+                else:
+                    screenshots = str(screenshots_raw) if screenshots_raw else None
+                    print(f"[debug-server] Converted to string, length: {len(screenshots) if screenshots else 0}")
             elif hasattr(result, 'result') and hasattr(result.result, 'screenshots') and callable(result.result.screenshots):
-                screenshots = result.result.screenshots()
+                print(f"[debug-server] Found screenshots method on result.result")
+                screenshots_raw = result.result.screenshots()
+                print(f"[debug-server] screenshots_raw type: {type(screenshots_raw)}, length: {len(screenshots_raw) if hasattr(screenshots_raw, '__len__') else 'N/A'}")
+                # Convert to string if it's a list or other type
+                if isinstance(screenshots_raw, list):
+                    screenshots = json.dumps(screenshots_raw, ensure_ascii=False)
+                    print(f"[debug-server] Converted list to JSON string, length: {len(screenshots)}")
+                else:
+                    screenshots = str(screenshots_raw) if screenshots_raw else None
+                    print(f"[debug-server] Converted to string, length: {len(screenshots) if screenshots else 0}")
+            else:
+                print(f"[debug-server] No screenshots method found")
         except Exception as e:
             print(f"Warning: Could not extract screenshots: {str(e)}")
+            import traceback
+            traceback.print_exc()
         
         # Close the browser after use
         await browser.close()
+        
+        print(f"[debug-server] Final values - model_actions type: {type(model_actions)}, screenshots type: {type(screenshots)}")
+        print(f"[debug-server] model_actions length: {len(model_actions) if model_actions else 0}")
+        print(f"[debug-server] screenshots length: {len(screenshots) if screenshots else 0}")
         
         return BrowserAgentResponse(
             result=result.final_result(),

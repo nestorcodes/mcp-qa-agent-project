@@ -95,7 +95,7 @@ def test_youtube_transcript():
 def test_process_prompt():
     """Test the QA Agent API process-prompt endpoint"""
     # prompt = "Entra al contenido de comparasoftware.com y analiza si hay algun error de ortografia o contenido que no sea correcto"
-    prompt = "Entra a https://www.comparasoftware.com/ii y analiza si hay algun bug en el contenido."
+    prompt = "Entra a https://www.comparasoftware.com/ii y llena el formulario de contacto."
     payload = {"prompt": prompt}
     
     # Test with valid API key
