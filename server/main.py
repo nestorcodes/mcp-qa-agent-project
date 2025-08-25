@@ -44,6 +44,8 @@ class BrowserAgentRequest(BaseModel):
 class BrowserAgentResponse(BaseModel):
     result: str
     prompt: str
+    model_actions: str | None = None
+    screenshots: str | None = None
 
 class YouTubeTranscriptRequest(BaseModel):
     url: str
@@ -166,12 +168,36 @@ async def browser_agent(request: BrowserAgentRequest, _: None = Depends(verify_a
         result = await agent.run()
         print(result.final_result())
         
+        # Extract model_actions and screenshots if available
+        model_actions = None
+        screenshots = None
+        
+        try:
+            # Try to get model_actions from the result
+            if hasattr(result, 'model_actions') and callable(result.model_actions):
+                model_actions = result.model_actions()
+            elif hasattr(result, 'result') and hasattr(result.result, 'model_actions') and callable(result.result.model_actions):
+                model_actions = result.result.model_actions()
+        except Exception as e:
+            print(f"Warning: Could not extract model_actions: {str(e)}")
+        
+        try:
+            # Try to get screenshots from the result
+            if hasattr(result, 'screenshots') and callable(result.screenshots):
+                screenshots = result.screenshots()
+            elif hasattr(result, 'result') and hasattr(result.result, 'screenshots') and callable(result.result.screenshots):
+                screenshots = result.result.screenshots()
+        except Exception as e:
+            print(f"Warning: Could not extract screenshots: {str(e)}")
+        
         # Close the browser after use
         await browser.close()
         
         return BrowserAgentResponse(
             result=result.final_result(),
-            prompt=request.prompt
+            prompt=request.prompt,
+            model_actions=model_actions,
+            screenshots=screenshots
         )
     except Exception as e:
         print(f"[debug-server] Error running browser agent: {str(e)}")

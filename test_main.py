@@ -70,8 +70,12 @@ def test_browser_agent():
     data = response.json()
     assert "result" in data
     assert "prompt" in data
+    assert "model_actions" in data
+    assert "screenshots" in data
     assert data["prompt"] == prompt
     print("✅ Test browser agent endpoint passed")
+    print(f"Model Actions: {data['model_actions']}")
+    print(f"Screenshots: {data['screenshots']}")
     print(data)
 
 def test_youtube_transcript():
@@ -100,10 +104,14 @@ def test_process_prompt():
     data = response.json()
     assert "status" in data
     assert "console_logs" in data
+    assert "model_actions" in data
+    assert "screenshots" in data
     assert data["status"] in ["passed", "failed"]
     print("✅ Test process-prompt endpoint passed (with valid API key)")
     print(f"Status: {data['status']}")
     print(f"Console logs length: {len(data['console_logs'])} characters")
+    print(f"Model Actions: {data['model_actions']}")
+    print(f"Screenshots: {data['screenshots']}")
     print(data)
 
 def test_process_prompt_no_auth():

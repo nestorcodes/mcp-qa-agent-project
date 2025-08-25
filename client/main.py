@@ -25,6 +25,8 @@ class PromptRequest(BaseModel):
 class PromptResponse(BaseModel):
     status: str
     console_logs: str
+    model_actions: str | None = None
+    screenshots: str | None = None
 
 # Create FastAPI app
 app = FastAPI(
@@ -220,6 +222,10 @@ Remember to always prioritize software quality and user experience in your respo
         # create executor with agent and tools context
         self.agent_executor = AgentExecutor(agent=self.agent, tools=self.tools, verbose=True)    
 
+        # Initialize browser agent result storage
+        self.last_browser_model_actions = None
+        self.last_browser_screenshots = None
+
     
     # crawl website function for tool
     def crawl_website(self, url: str) -> str:
@@ -259,13 +265,24 @@ Remember to always prioritize software quality and user experience in your respo
             response_text = f"Browser agent completed task: {prompt}\n\n"
             response_text += f"Result: {result['result']}"
             
+            # Store model_actions and screenshots for later use in process_request
+            self.last_browser_model_actions = result.get('model_actions')
+            self.last_browser_screenshots = result.get('screenshots')
+            
             return response_text
         except Exception as e:
+            # Reset model_actions and screenshots on error
+            self.last_browser_model_actions = None
+            self.last_browser_screenshots = None
             return f"Error running browser agent: {str(e)}"
     
     # process request function 
     def process_request(self, user_input: str) -> Dict[str, Any]:
         """Process a user request using the QA agent and return JSON with status and console_log."""
+        # Reset browser agent results for new request
+        self.last_browser_model_actions = None
+        self.last_browser_screenshots = None
+        
         # Create a custom agent executor that limits to one tool use
         single_tool_executor = AgentExecutor(
             agent=self.agent,
@@ -293,10 +310,12 @@ Remember to always prioritize software quality and user experience in your respo
             status = "passed"
             console_log = agent_response
         
-        # Return JSON with status and console_log
+        # Return JSON with status, console_log, model_actions, and screenshots
         return {
             "status": status,
-            "console_logs": console_log
+            "console_logs": console_log,
+            "model_actions": self.last_browser_model_actions,
+            "screenshots": self.last_browser_screenshots
         }
 
 # Global QA Agent instance
